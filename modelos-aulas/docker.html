@@ -1,0 +1,1886 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tutorial: Entendendo o Docker</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            base: "var(--color-base)",
+            accent: "var(--color-accent)",
+            text: "var(--color-text)",
+            muted: "var(--color-muted)",
+            card: "var(--color-card)",
+            border: "var(--color-border)",
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          }
+        },
+      },
+    };
+  </script>
+
+  <style>
+    :root {
+      --color-base: #0f172a;
+      --color-accent: #3b82f6;
+      --color-text: #f8fafc;
+      --color-muted: #94a3b8;
+      --color-card: #1e293b;
+      --color-border: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      line-height: 1.6;
+      letter-spacing: -0.01em;
+    }
+
+    .bg-pattern {
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0),
+        radial-gradient(circle at 12px 12px, rgba(59, 130, 246, 0.1) 1px, transparent 0);
+      background-size: 24px 24px, 24px 24px;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--color-base); }
+    ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
+
+    pre {
+      background-color: #0d1117;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      overflow-x: auto;
+      border: 1px solid var(--color-border);
+      margin: 0;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      color: #e2e8f0;
+    }
+
+    .step-content {
+      display: none;
+      animation: fadeIn 0.35s ease-in-out;
+    }
+
+    .step-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .nav-item.active {
+      background-color: var(--color-accent);
+      color: white;
+      border-color: var(--color-accent);
+    }
+
+    .nav-group-content {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.22s ease;
+    }
+
+    .nav-group.open .nav-group-content {
+      grid-template-rows: 1fr;
+    }
+
+    .nav-group-inner {
+      overflow: hidden;
+    }
+
+    .nav-group-toggle .chevron {
+      transition: transform 0.22s ease;
+    }
+
+    .nav-group.open .nav-group-toggle .chevron {
+      transform: rotate(180deg);
+    }
+
+    #sidebar-drawer {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 40;
+      width: min(20rem, 86vw);
+      transform: translateX(-100%);
+      transition: transform 0.25s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    #sidebar-drawer.open {
+      transform: translateX(0);
+    }
+
+    @media (min-width: 768px) {
+      #sidebar-drawer {
+        position: static;
+        width: 17rem;
+        height: 100vh;
+        transform: translateX(0);
+      }
+    }
+
+    .content-shell {
+      width: min(100%, 106rem);
+      margin-inline: auto;
+    }
+
+    @media (min-width: 1536px) {
+      #sidebar-drawer {
+        width: 19rem;
+      }
+
+      .content-shell {
+        width: min(100%, 112rem);
+      }
+    }
+
+    @media (min-width: 2200px) {
+      .content-shell {
+        width: min(100%, 118rem);
+      }
+    }
+
+    .dkr-cmd { color: #60a5fa; font-weight: 700; }
+    .dkr-param { color: #34d399; }
+    .dkr-string { color: #f472b6; }
+    .comment { color: #94a3b8; }
+
+    .code-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.75);
+      color: #cbd5e1;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .code-action-btn:hover {
+      border-color: rgba(59, 130, 246, 0.55);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .soft-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      backdrop-filter: blur(8px);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-base text-text bg-pattern flex overflow-x-hidden font-sans">
+
+  <div id="sidebar-backdrop" class="fixed inset-0 z-30 hidden bg-slate-950/70 md:hidden" onclick="closeSidebar()"></div>
+
+  <aside id="sidebar-drawer" class="bg-card border-r border-border flex flex-col h-screen shadow-xl">
+    <div class="p-6 border-b border-border bg-base/50 backdrop-blur-sm">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <i data-lucide="box" class="text-accent w-6 h-6"></i>
+            <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-400">
+              Docker Master
+            </h1>
+          </div>
+          <p class="text-xs text-muted">Infraestrutura Ágil</p>
+        </div>
+        <button onclick="closeSidebar()" class="rounded-lg p-2 text-muted hover:text-white transition md:hidden">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto p-4 space-y-3">
+      <div class="nav-group open rounded-xl border border-white/5 bg-base/20" data-group="introducao">
+        <button type="button" onclick="toggleNavGroup('introducao')" class="nav-group-toggle flex w-full items-center justify-between px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted transition hover:text-white">
+          <span class="flex items-center gap-2"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Introdução</span>
+          <i data-lucide="chevron-down" class="chevron w-4 h-4"></i>
+        </button>
+        <div class="nav-group-content">
+          <div class="nav-group-inner px-2 pb-2 space-y-1">
+            <button onclick="showStep('step-intro')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 active group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-xs font-mono group-hover:bg-white/20 transition">0</span>
+              <span class="font-medium">O que é Docker?</span>
+            </button>
+            <button onclick="showStep('step-resolve')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-xs font-mono group-hover:bg-white/20 transition">1</span>
+              <span class="font-medium">O que resolve?</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-group open rounded-xl border border-white/5 bg-base/20" data-group="instalacao">
+        <button type="button" onclick="toggleNavGroup('instalacao')" class="nav-group-toggle flex w-full items-center justify-between px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted transition hover:text-white">
+          <span class="flex items-center gap-2"><i data-lucide="download" class="w-3.5 h-3.5"></i> Instalação</span>
+          <i data-lucide="chevron-down" class="chevron w-4 h-4"></i>
+        </button>
+        <div class="nav-group-content">
+          <div class="nav-group-inner px-2 pb-2 space-y-1">
+            <button onclick="showStep('step-requirements')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-xs font-mono group-hover:bg-white/20 transition">2</span>
+              <span>Requisitos</span>
+            </button>
+            <button onclick="showStep('step-install-windows')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-xs font-mono group-hover:bg-white/20 transition">3</span>
+              <span>Instalar no Windows</span>
+            </button>
+            <button onclick="showStep('step-install-linux')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-xs font-mono group-hover:bg-white/20 transition">4</span>
+              <span>Instalar no Linux</span>
+            </button>
+            <button onclick="showStep('step-install-macos')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-xs font-mono group-hover:bg-white/20 transition">5</span>
+              <span>Instalar no macOS</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-group open rounded-xl border border-white/5 bg-base/20" data-group="ciclo">
+        <button type="button" onclick="toggleNavGroup('ciclo')" class="nav-group-toggle flex w-full items-center justify-between px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted transition hover:text-white">
+          <span class="flex items-center gap-2"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> O Ciclo de Vida</span>
+          <i data-lucide="chevron-down" class="chevron w-4 h-4"></i>
+        </button>
+        <div class="nav-group-content">
+          <div class="nav-group-inner px-2 pb-2 space-y-1">
+            <button onclick="showStep('step-dockerfile')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-xs font-mono group-hover:bg-white/20 transition">6</span>
+              <span>Dockerfile, imagem e build</span>
+            </button>
+            <button onclick="showStep('step-container')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-xs font-mono group-hover:bg-white/20 transition">7</span>
+              <span>Container em runtime</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-group open rounded-xl border border-white/5 bg-base/20" data-group="orquestracao">
+        <button type="button" onclick="toggleNavGroup('orquestracao')" class="nav-group-toggle flex w-full items-center justify-between px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted transition hover:text-white">
+          <span class="flex items-center gap-2"><i data-lucide="layers" class="w-3.5 h-3.5"></i> Stack Técnica</span>
+          <i data-lucide="chevron-down" class="chevron w-4 h-4"></i>
+        </button>
+        <div class="nav-group-content">
+          <div class="nav-group-inner px-2 pb-2 space-y-1">
+            <button onclick="showStep('step-compose')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-xs font-mono group-hover:bg-white/20 transition">8</span>
+              <span>Compose, volumes e redes</span>
+            </button>
+            <button onclick="showStep('step-compose-compare')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-[10px] font-mono group-hover:bg-white/20 transition">8A</span>
+              <span>Comparar com Dockerfile</span>
+            </button>
+            <button onclick="showStep('step-summary')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-xs font-mono group-hover:bg-white/20 transition">9</span>
+              <span>Resumo técnico</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-group open rounded-xl border border-white/5 bg-base/20" data-group="aplicacao">
+        <button type="button" onclick="toggleNavGroup('aplicacao')" class="nav-group-toggle flex w-full items-center justify-between px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted transition hover:text-white">
+          <span class="flex items-center gap-2"><i data-lucide="building-2" class="w-3.5 h-3.5"></i> Referências</span>
+          <i data-lucide="chevron-down" class="chevron w-4 h-4"></i>
+        </button>
+        <div class="nav-group-content">
+          <div class="nav-group-inner px-2 pb-2 space-y-1">
+            <button onclick="showStep('step-companies')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-xs font-mono group-hover:bg-white/20 transition">10</span>
+              <span>Adoção em empresas</span>
+            </button>
+            <button onclick="showStep('step-examples')" class="nav-item w-full text-left px-4 py-3 rounded-lg border border-transparent hover:bg-white/5 transition flex items-center gap-3 group">
+              <span class="grid place-items-center w-6 h-6 rounded bg-white/10 text-xs font-mono group-hover:bg-white/20 transition">11</span>
+              <span>Casos de uso</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </aside>
+
+  <main class="flex-1 min-w-0 h-screen overflow-y-auto relative scroll-smooth">
+    <header class="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-base/80 px-4 py-3 backdrop-blur md:hidden">
+      <div>
+        <p class="text-[11px] uppercase tracking-[0.18em] text-muted">Tutorial</p>
+        <p class="text-sm font-semibold text-white">Docker Descomplicado</p>
+      </div>
+      <button onclick="openSidebar()" class="rounded-lg border border-border bg-card px-3 py-2 text-white transition hover:border-accent hover:text-accent">
+        <span class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide">
+          <i data-lucide="menu" class="w-4 h-4"></i> Menu
+        </span>
+      </button>
+    </header>
+
+    <div class="px-4 py-6 md:px-8 md:py-10 xl:px-8 2xl:px-10">
+      <div class="content-shell">
+        <div>
+
+          <section class="min-w-0 w-full">
+            <!-- STEP 0 -->
+            <div id="step-intro" class="step-content active space-y-8">
+              <div class="border-b border-border pb-6">
+                <span class="text-accent text-sm font-bold tracking-wider uppercase flex items-center gap-2 mb-2">
+                  <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span> Módulo Inicial
+                </span>
+                <h2 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4">Visão geral do Docker</h2>
+                <p class="text-lg text-muted leading-8 max-w-3xl">
+                  Docker é uma plataforma de containerização que permite empacotar, distribuir e executar aplicações em ambientes isolados chamados containers. Em vez de depender da configuração da máquina, a aplicação leva junto tudo o que precisa para funcionar.
+                </p>
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-6">
+                <div class="p-6 rounded-2xl soft-card bg-card border border-border hover:border-accent/50 transition-colors group">
+                  <div class="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i data-lucide="server" class="text-blue-400"></i>
+                  </div>
+                  <h3 class="text-lg font-semibold mb-2 text-white">Finalidade</h3>
+                  <p class="text-sm text-muted leading-7">
+                    Serve para transformar uma aplicação em uma imagem padronizada, com código, bibliotecas, dependências e configurações, facilitando a criação do mesmo container em desenvolvimento, homologação e produção.
+                  </p>
+                </div>
+
+                <div class="p-6 rounded-2xl soft-card bg-card border border-border hover:border-accent/50 transition-colors group">
+                  <div class="w-11 h-11 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <i data-lucide="box" class="text-emerald-400"></i>
+                  </div>
+                  <h3 class="text-lg font-semibold mb-2 text-white">Princípio operacional</h3>
+                  <p class="text-sm text-muted leading-7">
+                    Criar ambientes isolados e previsíveis. Cada sistema roda no seu próprio container, sem interferir nos outros, mantendo consistência e reduzindo erros de configuração.
+                  </p>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6 md:p-8">
+                <div class="flex items-start gap-4">
+                  <div class="w-12 h-12 rounded-xl bg-accent/15 flex items-center justify-center flex-shrink-0">
+                    <i data-lucide="lightbulb" class="w-5 h-5 text-accent"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-2xl font-bold text-white mb-3">Definição objetiva</h3>
+                    <p class="text-muted leading-8">
+                      Docker permite empacotar a aplicação em uma imagem reproduzível. A partir dessa imagem, o mesmo container pode ser iniciado em ambientes diferentes, com menos variação de configuração.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-8 flex justify-end">
+                <button onclick="showStep('step-resolve')" class="bg-accent hover:bg-blue-600 text-white px-8 py-4 rounded-xl font-bold transition flex items-center gap-2 shadow-lg shadow-accent/20 hover:shadow-accent/40 hover:-translate-y-1">
+                  Entender o que ele resolve <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 1 -->
+            <div id="step-resolve" class="step-content space-y-8">
+              <div class="border-b border-border pb-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-mono font-bold border border-emerald-500/20">PASSO 1</span>
+                </div>
+                <h2 class="text-3xl font-bold text-white">O que o Docker resolve?</h2>
+                <p class="text-muted mt-2 text-base leading-7">
+                  Esta seção apresenta os problemas operacionais que o Docker ajuda a reduzir em desenvolvimento, teste e publicação.
+                </p>
+              </div>
+
+              <div class="grid gap-5 md:grid-cols-2">
+                <div class="bg-card rounded-2xl border border-border p-6 border-l-4 border-l-blue-500">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                      <i data-lucide="alert-triangle" class="text-blue-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Diferença entre ambientes</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Evita o famoso “na minha máquina funciona”. O mesmo container roda igual em qualquer máquina, reduzindo falhas entre dev, teste e produção.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6 border-l-4 border-l-emerald-500">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                      <i data-lucide="shield" class="text-emerald-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Conflito de dependências</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Permite rodar aplicações com versões diferentes de Node, PHP, Java, Python ou banco sem que uma quebre a outra.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6 border-l-4 border-l-orange-500">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                      <i data-lucide="rocket" class="text-orange-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Deploy mais rápido</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Com a imagem pronta, a aplicação sobe mais rápido e com menos improviso. Isso reduz retrabalho, erros manuais e acelera a entrega.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6 border-l-4 border-l-pink-500">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center">
+                      <i data-lucide="settings-2" class="text-pink-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Padronização operacional</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Facilita treinamento, manutenção e escalabilidade, porque todos seguem o mesmo modelo de empacotamento e execução.
+                  </p>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6 md:p-8">
+                <h3 class="text-xl font-bold text-white mb-3">Em uma frase para apresentação</h3>
+                <p class="text-muted leading-8">
+                  Docker resolve inconsistência de ambiente, conflito de dependências e lentidão no deploy, criando uma forma padronizada, rápida e previsível de rodar aplicações.
+                </p>
+              </div>
+
+              <div class="flex justify-between pt-4">
+                <button onclick="showStep('step-intro')" class="text-muted hover:text-white px-4 py-2 text-sm flex items-center gap-2">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                </button>
+                <button onclick="showStep('step-requirements')" class="bg-card border border-border hover:border-accent hover:text-accent text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  Próximo: instalação <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 2 -->
+            <div id="step-requirements" class="step-content space-y-8">
+              <div class="border-b border-border pb-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-mono font-bold border border-amber-500/20">PASSO 2</span>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Requisitos antes de instalar</h2>
+                <p class="text-muted mt-2 leading-7">
+                  Antes da instalação, valide se a máquina tem folga suficiente para executar containers sem travar o sistema. Essa checagem evita uma configuração que funciona, mas entrega uma experiência ruim.
+                </p>
+              </div>
+
+              <div class="grid gap-5 md:grid-cols-3">
+                <div class="bg-card rounded-2xl border border-border p-6 border-l-4 border-l-blue-500">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                      <i data-lucide="cpu" class="text-blue-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Processador</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Recomendado: CPU 64 bits com virtualização habilitada. Em desktop, pense em Intel Core i5, AMD Ryzen 5 ou superior. No Mac, Apple Silicon M1 ou mais novo entrega ótima experiência.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6 border-l-4 border-l-emerald-500">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                      <i data-lucide="memory-stick" class="text-emerald-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Memória RAM</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Mínimo prático: 8 GB. Recomendado para aula, API, banco e navegador ao mesmo tempo: 16 GB. Abaixo disso, o Docker até abre, mas a multitarefa fica limitada.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6 border-l-4 border-l-pink-500">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center">
+                      <i data-lucide="hard-drive" class="text-pink-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Espaço em disco</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Reserve pelo menos 20 GB livres. Recomendado: 40 GB ou mais, porque imagens, volumes, cache de build e logs crescem rápido durante testes e estudos.
+                  </p>
+                </div>
+              </div>
+
+              <div class="grid gap-5 lg:grid-cols-3">
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <h3 class="font-bold text-white mb-3 flex items-center gap-2">
+                    <i data-lucide="monitor" class="w-4 h-4 text-blue-400"></i> Windows
+                  </h3>
+                  <p class="text-sm text-muted leading-7">
+                    Use Windows 10 ou 11 em 64 bits, com WSL 2 ativado. Também vale confirmar na BIOS se a virtualização (VT-x ou AMD-V) está habilitada.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <h3 class="font-bold text-white mb-3 flex items-center gap-2">
+                    <i data-lucide="square-terminal" class="w-4 h-4 text-emerald-400"></i> Linux
+                  </h3>
+                  <p class="text-sm text-muted leading-7">
+                    Prefira uma distro 64 bits atualizada, como Ubuntu 22.04+, Debian 12+, Fedora ou equivalente. É importante ter acesso a <code>sudo</code> para instalar pacotes e iniciar o serviço.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <h3 class="font-bold text-white mb-3 flex items-center gap-2">
+                    <i data-lucide="laptop" class="w-4 h-4 text-cyan-400"></i> macOS
+                  </h3>
+                  <p class="text-sm text-muted leading-7">
+                    Use macOS recente em chip Intel ou Apple Silicon. Antes de baixar, confirme qual arquitetura do Mac está em uso para escolher o instalador correto.
+                  </p>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6">
+                <h3 class="text-xl font-bold text-white mb-3">Escolha apenas uma trilha de instalação</h3>
+                <p class="text-muted leading-8">
+                  Windows, Linux e macOS são caminhos alternativos. A partir daqui, escolha somente a trilha correspondente ao sistema operacional da máquina.
+                </p>
+                <div class="mt-5 grid gap-3 md:grid-cols-3">
+                  <button onclick="showStep('step-install-windows')" class="rounded-xl border border-border bg-base/40 px-4 py-3 text-sm font-semibold text-white transition hover:border-accent hover:text-accent">
+                    Trilha Windows
+                  </button>
+                  <button onclick="showStep('step-install-linux')" class="rounded-xl border border-border bg-base/40 px-4 py-3 text-sm font-semibold text-white transition hover:border-accent hover:text-accent">
+                    Trilha Linux
+                  </button>
+                  <button onclick="showStep('step-install-macos')" class="rounded-xl border border-border bg-base/40 px-4 py-3 text-sm font-semibold text-white transition hover:border-accent hover:text-accent">
+                    Trilha macOS
+                  </button>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6 md:p-8">
+                <h3 class="text-xl font-bold text-white mb-3">Regra prática para laboratório</h3>
+                <p class="text-muted leading-8">
+                  Se a máquina tiver CPU 64 bits, virtualização ativa, 16 GB de RAM e pelo menos 40 GB livres, já é um ambiente confortável para aprender Docker, testar imagens e subir pequenos stacks locais.
+                </p>
+              </div>
+
+              <div class="flex justify-between pt-4">
+                <button onclick="showStep('step-resolve')" class="text-muted hover:text-white px-4 py-2 text-sm flex items-center gap-2">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                </button>
+                <button onclick="showStep('step-install-windows')" class="bg-card border border-border hover:border-accent hover:text-accent text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  Abrir trilha Windows <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div id="step-install-windows" class="step-content space-y-8">
+              <div class="border-b border-border pb-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 rounded-full bg-sky-500/10 text-sky-400 text-xs font-mono font-bold border border-sky-500/20">PASSO 3</span>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Instalação no Windows</h2>
+                <p class="text-muted mt-2 leading-7">
+                  Escolha esta trilha se a máquina usar Windows. O caminho mais estável é usar o Docker Desktop com backend em WSL 2, que entrega interface gráfica, engine, Compose e integração com terminal Linux.
+                </p>
+              </div>
+
+              <div class="grid gap-5 lg:grid-cols-2">
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="grid place-items-center w-9 h-9 rounded-lg bg-sky-500/20 text-sky-400 font-bold">1</span>
+                    <h3 class="text-lg font-bold text-white">Ative o WSL 2</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Abra o PowerShell como administrador e habilite o subsistema Linux. Reinicie se o Windows solicitar.
+                  </p>
+                  <div class="mt-4 bg-base/50 rounded-xl border border-border overflow-hidden">
+                    <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code><span class="dkr-cmd">wsl</span> --install</code></pre>
+                  </div>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="grid place-items-center w-9 h-9 rounded-lg bg-sky-500/20 text-sky-400 font-bold">2</span>
+                    <h3 class="text-lg font-bold text-white">Instale o Docker Desktop</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Baixe o instalador para Windows, execute o setup e mantenha marcada a opção de usar WSL 2. Ao fim, abra o Docker Desktop para concluir a configuração inicial.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="grid place-items-center w-9 h-9 rounded-lg bg-sky-500/20 text-sky-400 font-bold">3</span>
+                    <h3 class="text-lg font-bold text-white">Confirme a integração</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Nas configurações do Docker Desktop, valide se a integração com sua distro WSL está ativa. Isso permite usar <code>docker</code> direto do terminal Linux.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="grid place-items-center w-9 h-9 rounded-lg bg-sky-500/20 text-sky-400 font-bold">4</span>
+                    <h3 class="text-lg font-bold text-white">Teste a instalação</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Rode um container de teste para validar engine, download de imagem e execução local.
+                  </p>
+                  <div class="mt-4 bg-base/50 rounded-xl border border-border overflow-hidden">
+                    <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code><span class="dkr-cmd">docker</span> version
+<span class="dkr-cmd">docker</span> run <span class="dkr-string">hello-world</span></code></pre>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6">
+                <h3 class="text-xl font-bold text-white mb-3">Ponto técnico importante</h3>
+                <p class="text-muted leading-8">
+                  No Windows, o Docker não roda sozinho como no Linux puro: ele usa WSL 2 para entregar um ambiente Linux por baixo. Essa camada é o motivo de a virtualização precisar estar ativa.
+                </p>
+              </div>
+
+              <div class="flex justify-between pt-4">
+                <button onclick="showStep('step-requirements')" class="text-muted hover:text-white px-4 py-2 text-sm flex items-center gap-2">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                </button>
+                <button onclick="showStep('step-dockerfile')" class="bg-card border border-border hover:border-accent hover:text-accent text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  Continuar para build <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 4 -->
+            <div id="step-install-linux" class="step-content space-y-8">
+              <div class="border-b border-border pb-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-mono font-bold border border-emerald-500/20">PASSO 4</span>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Instalação no Linux</h2>
+                <p class="text-muted mt-2 leading-7">
+                  Escolha esta trilha se a máquina usar Linux. O fluxo mais comum é instalar o Docker Engine diretamente no sistema. O exemplo abaixo funciona bem como referência para distribuições baseadas em Ubuntu e Debian.
+                </p>
+              </div>
+
+              <div class="grid gap-5 lg:grid-cols-3">
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="grid place-items-center w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold">1</span>
+                    <h3 class="text-lg font-bold text-white">Atualize o sistema</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Antes de instalar, atualize a lista de pacotes e garanta dependências básicas de certificados e download.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="grid place-items-center w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold">2</span>
+                    <h3 class="text-lg font-bold text-white">Instale o engine</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Após adicionar o repositório oficial do Docker, instale o engine, o CLI, o Buildx e o plugin do Compose.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="grid place-items-center w-9 h-9 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold">3</span>
+                    <h3 class="text-lg font-bold text-white">Ative e valide</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Suba o serviço no boot, rode um container de teste e, se quiser usar sem <code>sudo</code>, adicione seu usuário ao grupo <code>docker</code>.
+                  </p>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <h3 class="text-xl font-semibold text-white">Sequência prática (Ubuntu / Debian)</h3>
+                <div class="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
+                  <div class="px-4 py-2 border-b border-border bg-base/50 text-xs text-muted font-mono flex items-center gap-2">
+                    <i data-lucide="terminal" class="w-3 h-3"></i> Terminal
+                  </div>
+                  <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code><span class="dkr-cmd">sudo</span> apt update
+<span class="dkr-cmd">sudo</span> apt install ca-certificates curl
+<span class="comment"># adicione o repositório oficial do Docker</span>
+<span class="dkr-cmd">sudo</span> apt update
+<span class="dkr-cmd">sudo</span> apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+<span class="dkr-cmd">sudo</span> systemctl enable --now docker
+<span class="dkr-cmd">sudo</span> docker run <span class="dkr-string">hello-world</span></code></pre>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6 md:p-8">
+                <h3 class="text-xl font-bold text-white mb-3">Observação importante</h3>
+                <p class="text-muted leading-8">
+                  No Linux, o Docker costuma consumir menos overhead porque roda nativamente no kernel. Por isso ele é a base mais comum para servidores e ambientes de produção.
+                </p>
+              </div>
+
+              <div class="flex justify-between pt-4">
+                <button onclick="showStep('step-requirements')" class="text-muted hover:text-white px-4 py-2 text-sm flex items-center gap-2">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                </button>
+                <button onclick="showStep('step-dockerfile')" class="bg-card border border-border hover:border-accent hover:text-accent text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  Continuar para build <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 5 -->
+            <div id="step-install-macos" class="step-content space-y-8">
+              <div class="border-b border-border pb-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 rounded-full bg-slate-500/10 text-slate-300 text-xs font-mono font-bold border border-slate-500/20">PASSO 5</span>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Instalação no macOS</h2>
+                <p class="text-muted mt-2 leading-7">
+                  Escolha esta trilha se a máquina usar macOS. A instalação padrão também é feita com Docker Desktop. O ponto principal é baixar o instalador correto para o chip Intel ou Apple Silicon.
+                </p>
+              </div>
+
+              <div class="grid gap-5 lg:grid-cols-2">
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="grid place-items-center w-9 h-9 rounded-lg bg-slate-500/20 text-slate-200 font-bold">1</span>
+                    <h3 class="text-lg font-bold text-white">Identifique o chip</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Em <code>Sobre Este Mac</code>, confira se a máquina usa Intel ou Apple Silicon. Isso define qual pacote <code>.dmg</code> você deve baixar.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="grid place-items-center w-9 h-9 rounded-lg bg-slate-500/20 text-slate-200 font-bold">2</span>
+                    <h3 class="text-lg font-bold text-white">Instale o aplicativo</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Abra o arquivo baixado, arraste o Docker para a pasta <code>Applications</code> e inicie o app pela primeira vez para concluir permissões e componentes auxiliares.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="grid place-items-center w-9 h-9 rounded-lg bg-slate-500/20 text-slate-200 font-bold">3</span>
+                    <h3 class="text-lg font-bold text-white">Aceite permissões</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    O macOS pode pedir senha do sistema para instalar componentes de rede e integração com o terminal. Em Macs Intel, o sistema também pode sugerir Rosetta 2.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <span class="grid place-items-center w-9 h-9 rounded-lg bg-slate-500/20 text-slate-200 font-bold">4</span>
+                    <h3 class="text-lg font-bold text-white">Valide no terminal</h3>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Depois do aplicativo iniciar, abra o Terminal e confirme versão e execução do container de teste.
+                  </p>
+                  <div class="mt-4 bg-base/50 rounded-xl border border-border overflow-hidden">
+                    <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code><span class="dkr-cmd">docker</span> version
+<span class="dkr-cmd">docker</span> run <span class="dkr-string">hello-world</span></code></pre>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6">
+                <h3 class="text-xl font-bold text-white mb-3">Observação técnica</h3>
+                <p class="text-muted leading-8">
+                  No macOS, o Docker Desktop também cria uma camada Linux controlada pelo aplicativo. Para o usuário, a experiência parece nativa, mas por baixo existe uma VM otimizada para rodar os containers.
+                </p>
+              </div>
+
+              <div class="flex justify-between pt-4">
+                <button onclick="showStep('step-requirements')" class="text-muted hover:text-white px-4 py-2 text-sm flex items-center gap-2">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                </button>
+                <button onclick="showStep('step-dockerfile')" class="bg-card border border-border hover:border-accent hover:text-accent text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  Continuar para build <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 6 -->
+            <div id="step-dockerfile" class="step-content space-y-8">
+              <div class="border-b border-border pb-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-mono font-bold border border-blue-500/20">PASSO 6</span>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Dockerfile, imagem e build</h2>
+                <p class="text-muted mt-2 leading-7">
+                  Aqui começa o fluxo técnico de empacotamento: primeiro você descreve como a imagem deve ser construída, depois executa o build e gera um artefato imutável para rodar em qualquer ambiente compatível.
+                </p>
+              </div>
+
+              <div class="grid gap-4 xl:grid-cols-3">
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-2 mb-3">
+                    <i data-lucide="file-text" class="text-yellow-400"></i>
+                    <p class="font-bold text-white">Dockerfile</p>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    É um arquivo texto com instruções de build como <code>FROM</code>, <code>RUN</code>, <code>COPY</code>, <code>ENV</code> e <code>CMD</code>. Ele define como a imagem será montada a partir de uma base, quais dependências serão instaladas e como a aplicação será inicializada.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-2 mb-3">
+                    <i data-lucide="package" class="text-purple-400"></i>
+                    <p class="font-bold text-white">Imagem</p>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    É o artefato gerado pelo processo de build. A imagem é versionável, imutável e reutilizável, contendo sistema base, runtime, bibliotecas, dependências e a configuração necessária para iniciar o processo principal da aplicação.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-2 mb-3">
+                    <i data-lucide="git-branch" class="text-cyan-400"></i>
+                    <p class="font-bold text-white">Encadeamento correto</p>
+                  </div>
+                  <p class="text-sm text-muted leading-7">
+                    Em termos técnicos, a sequência é: <code>Dockerfile</code> define o build, <code>docker build</code> gera a imagem, e a imagem depois pode ser instanciada como um ou mais containers. O Dockerfile não é o container em si e não substitui a definição de múltiplos <code>services</code> em <code>compose.yaml</code>.
+                  </p>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6 md:p-8">
+                <h3 class="text-xl font-bold text-white mb-3">Leitura correta para documentação técnica</h3>
+                <p class="text-muted leading-8">
+                  Para documentação, trate o Dockerfile como definição de construção de imagem e de processo de build. Isso evita ambiguidade e deixa claro que ele é um artefato técnico versionado no repositório.
+                </p>
+              </div>
+
+              <div class="space-y-4">
+                <h3 class="text-xl font-semibold text-white">Exemplos de Dockerfile</h3>
+                <div class="grid gap-4 lg:grid-cols-3">
+                  <div data-code-card data-code-title="Python + Flask" class="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
+                    <div class="px-4 py-3 border-b border-border bg-base/50 flex flex-wrap items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="text-xs text-muted font-mono flex items-center gap-2">
+                          <i data-lucide="file-text" class="w-3 h-3"></i> Dockerfile
+                        </div>
+                        <p class="text-sm font-semibold text-white mt-1">Python + Flask</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <button type="button" onclick="copyCode(this)" class="code-action-btn">
+                          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                          <span>Copiar</span>
+                        </button>
+                        <button type="button" onclick="expandCode(this)" class="code-action-btn">
+                          <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                          <span>Expandir</span>
+                        </button>
+                      </div>
+                    </div>
+                    <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code><span class="dkr-cmd">FROM</span> python:3.11-slim
+
+<span class="dkr-cmd">WORKDIR</span> /app
+
+<span class="dkr-cmd">COPY</span> requirements.txt .
+<span class="dkr-cmd">RUN</span> pip install --no-cache-dir -r requirements.txt
+
+<span class="dkr-cmd">COPY</span> . .
+
+<span class="dkr-cmd">ENV</span> FLASK_PORT=5000
+
+<span class="dkr-cmd">EXPOSE</span> 5000
+
+<span class="dkr-cmd">CMD</span> ["python", "main.py"]</code></pre>
+                  </div>
+
+                  <div data-code-card data-code-title="Java + Postgres" class="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
+                    <div class="px-4 py-3 border-b border-border bg-base/50 flex flex-wrap items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="text-xs text-muted font-mono flex items-center gap-2">
+                          <i data-lucide="file-text" class="w-3 h-3"></i> Dockerfile
+                        </div>
+                        <p class="text-sm font-semibold text-white mt-1">Java + Postgres</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <button type="button" onclick="copyCode(this)" class="code-action-btn">
+                          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                          <span>Copiar</span>
+                        </button>
+                        <button type="button" onclick="expandCode(this)" class="code-action-btn">
+                          <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                          <span>Expandir</span>
+                        </button>
+                      </div>
+                    </div>
+                    <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code><span class="dkr-cmd">FROM</span> eclipse-temurin:21-jre-alpine
+
+<span class="dkr-cmd">WORKDIR</span> /app
+
+<span class="dkr-cmd">COPY</span> target/app.jar app.jar
+
+<span class="dkr-cmd">ENV</span> SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/appdb
+
+<span class="dkr-cmd">EXPOSE</span> 8080
+
+<span class="dkr-cmd">CMD</span> ["java", "-jar", "app.jar"]</code></pre>
+                  </div>
+
+                  <div data-code-card data-code-title="Node.js + MySQL" class="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
+                    <div class="px-4 py-3 border-b border-border bg-base/50 flex flex-wrap items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="text-xs text-muted font-mono flex items-center gap-2">
+                          <i data-lucide="file-text" class="w-3 h-3"></i> Dockerfile
+                        </div>
+                        <p class="text-sm font-semibold text-white mt-1">Node.js + MySQL</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <button type="button" onclick="copyCode(this)" class="code-action-btn">
+                          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                          <span>Copiar</span>
+                        </button>
+                        <button type="button" onclick="expandCode(this)" class="code-action-btn">
+                          <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                          <span>Expandir</span>
+                        </button>
+                      </div>
+                    </div>
+                    <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code><span class="dkr-cmd">FROM</span> node:20-alpine
+
+<span class="dkr-cmd">WORKDIR</span> /app
+
+<span class="dkr-cmd">COPY</span> package*.json ./
+<span class="dkr-cmd">RUN</span> npm ci --omit=dev
+
+<span class="dkr-cmd">COPY</span> . .
+
+<span class="dkr-cmd">ENV</span> DB_HOST=mysql
+<span class="dkr-cmd">ENV</span> DB_PORT=3306
+
+<span class="dkr-cmd">EXPOSE</span> 3000
+
+<span class="dkr-cmd">CMD</span> ["npm", "start"]</code></pre>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <h3 class="text-xl font-semibold text-white">Arquivos e comandos de apoio</h3>
+                <div class="grid gap-4 lg:grid-cols-3">
+                  <div data-code-card data-code-title=".dockerignore" class="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
+                    <div class="px-4 py-3 border-b border-border bg-base/50 flex flex-wrap items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="text-xs text-muted font-mono flex items-center gap-2">
+                          <i data-lucide="file-x" class="w-3 h-3"></i> Arquivo de apoio
+                        </div>
+                        <p class="text-sm font-semibold text-white mt-1">.dockerignore</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <button type="button" onclick="copyCode(this)" class="code-action-btn">
+                          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                          <span>Copiar</span>
+                        </button>
+                        <button type="button" onclick="expandCode(this)" class="code-action-btn">
+                          <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                          <span>Expandir</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="px-4 py-4 border-b border-border bg-gradient-to-br from-base via-slate-900/70 to-emerald-950/20">
+                      <div class="rounded-xl border border-white/5 bg-base/50 p-4 space-y-3">
+                        <div class="flex items-center gap-3">
+                          <div class="w-10 h-10 rounded-xl border border-emerald-500/20 bg-emerald-500/10 flex items-center justify-center">
+                            <i data-lucide="ban" class="w-5 h-5 text-emerald-400"></i>
+                          </div>
+                          <div>
+                            <p class="text-[11px] font-mono uppercase tracking-[0.18em] text-muted">Contexto de build</p>
+                            <p class="text-sm font-semibold text-white">Reduz arquivos desnecessarios</p>
+                          </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2 text-[11px] font-mono">
+                          <span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-slate-300">.venv</span>
+                          <span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-slate-300">__pycache__/</span>
+                          <span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-slate-300">docs/</span>
+                          <span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-slate-300">uploads/</span>
+                        </div>
+                        <div class="flex items-center justify-between rounded-lg border border-dashed border-border/80 px-3 py-2 text-xs text-muted">
+                          <span>Menos lixo no build</span>
+                          <span class="inline-flex items-center gap-2 text-emerald-300">
+                            <i data-lucide="package" class="w-3.5 h-3.5"></i> imagem mais limpa
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code>.git
+.venv
+.vscode
+__pycache__/
+*.pyc
+*.pyo
+.env
+aluno.db
+uploads/
+preview/
+docs/
+aulas-statico/</code></pre>
+                  </div>
+
+                  <div data-code-card data-code-title="Build + Run" class="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
+                    <div class="px-4 py-3 border-b border-border bg-base/50 flex flex-wrap items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="text-xs text-muted font-mono flex items-center gap-2">
+                          <i data-lucide="terminal" class="w-3 h-3"></i> Terminal
+                        </div>
+                        <p class="text-sm font-semibold text-white mt-1">Build + Run</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <button type="button" onclick="copyCode(this)" class="code-action-btn">
+                          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                          <span>Copiar</span>
+                        </button>
+                        <button type="button" onclick="expandCode(this)" class="code-action-btn">
+                          <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                          <span>Expandir</span>
+                        </button>
+                      </div>
+                    </div>
+                    <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code><span class="comment"># Gera a imagem a partir do Dockerfile</span>
+<span class="dkr-cmd">docker</span> build -t <span class="dkr-string">painel-flask:latest</span> .
+
+<span class="comment"># Executa um container local</span>
+<span class="dkr-cmd">docker</span> run -p <span class="dkr-param">5000:5000</span> <span class="dkr-string">painel-flask:latest</span>
+
+<span class="comment"># Sobe em background com nome fixo</span>
+<span class="dkr-cmd">docker</span> run -d --name <span class="dkr-param">painel-flask</span> -p <span class="dkr-param">5000:5000</span> <span class="dkr-string">painel-flask:latest</span>
+
+<span class="comment"># Acompanha os logs do container</span>
+<span class="dkr-cmd">docker</span> logs -f <span class="dkr-param">painel-flask</span>
+
+<span class="comment"># Para e remove quando terminar</span>
+<span class="dkr-cmd">docker</span> stop <span class="dkr-param">painel-flask</span>
+<span class="dkr-cmd">docker</span> rm <span class="dkr-param">painel-flask</span></code></pre>
+                  </div>
+
+                  <div data-code-card data-code-title="compose.yaml" class="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
+                    <div class="px-4 py-3 border-b border-border bg-base/50 flex flex-wrap items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="text-xs text-muted font-mono flex items-center gap-2">
+                          <i data-lucide="layers-3" class="w-3 h-3"></i> Orquestracao
+                        </div>
+                        <p class="text-sm font-semibold text-white mt-1">compose.yaml</p>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <button type="button" onclick="copyCode(this)" class="code-action-btn">
+                          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                          <span>Copiar</span>
+                        </button>
+                        <button type="button" onclick="expandCode(this)" class="code-action-btn">
+                          <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+                          <span>Expandir</span>
+                        </button>
+                      </div>
+                    </div>
+                    <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code><span class="comment"># Define app e banco no mesmo ambiente</span>
+services:
+  app:
+    build: .
+    ports:
+      - <span class="dkr-string">"5000:5000"</span>
+  db:
+    image: <span class="dkr-string">postgres:16</span>
+
+<span class="comment"># Sobe os serviÃ§os</span>
+<span class="dkr-cmd">docker</span> compose up -d
+
+<span class="comment"># Para e remove os containers</span>
+<span class="dkr-cmd">docker</span> compose down</code></pre>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-between pt-4">
+                <button onclick="showStep('step-install-macos')" class="text-muted hover:text-white px-4 py-2 text-sm flex items-center gap-2">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                </button>
+                <button onclick="showStep('step-container')" class="bg-card border border-border hover:border-accent hover:text-accent text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  Próximo: container <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 7 -->
+            <div id="step-container" class="step-content space-y-8">
+              <div class="border-b border-border pb-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-mono font-bold border border-cyan-500/20">PASSO 7</span>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Container em execução (runtime)</h2>
+                <p class="text-muted mt-2 leading-7">
+                  Depois do build, a imagem passa a ser executada. O container é a instância em runtime desse artefato, com processo, rede e camada de escrita próprios.
+                </p>
+              </div>
+
+              <div class="bg-card rounded-2xl border border-border p-6 border-l-4 border-l-cyan-500">
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                    <i data-lucide="play-circle" class="text-cyan-400"></i>
+                  </div>
+                  <h3 class="text-xl font-bold text-white">Definição técnica</h3>
+                </div>
+                <p class="text-muted leading-8">
+                  Um container é um processo isolado criado a partir de uma imagem. Ele compartilha o kernel do host, mas roda com isolamento de filesystem, rede e recursos. Por isso, não deve ser descrito como máquina virtual completa, e sim como unidade de execução empacotada.
+                </p>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6 md:p-8">
+                <h3 class="text-xl font-bold text-white mb-3">Diferença crítica: imagem x container</h3>
+                <p class="text-muted leading-8">
+                  A imagem é estática e reutilizável. O container é dinâmico e representa a execução dessa imagem em um determinado momento. Uma única imagem pode originar vários containers, cada um com seu próprio estado de runtime.
+                </p>
+              </div>
+
+              <div class="space-y-4">
+                <h3 class="text-xl font-semibold text-white">Comando para criar e iniciar</h3>
+                <div class="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
+                  <div class="px-4 py-2 border-b border-border bg-base/50 text-xs text-muted font-mono flex items-center gap-2">
+                    <i data-lucide="terminal" class="w-3 h-3"></i> Terminal
+                  </div>
+                  <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code><span class="comment"># Cria o container do Flask e publica a porta HTTP local</span>
+<span class="dkr-cmd">docker</span> run -d -p <span class="dkr-param">8000:5000</span> --name <span class="dkr-string">painel-flask-app</span> painel-flask:latest</code></pre>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <h3 class="text-xl font-semibold text-white">Comandos úteis de inspeção</h3>
+                <div class="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
+                  <div class="px-4 py-2 border-b border-border bg-base/50 text-xs text-muted font-mono flex items-center gap-2">
+                    <i data-lucide="terminal" class="w-3 h-3"></i> Terminal
+                  </div>
+                  <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code><span class="comment"># Lista containers em execução</span>
+<span class="dkr-cmd">docker</span> ps
+
+<span class="comment"># Consulta logs do container</span>
+<span class="dkr-cmd">docker</span> logs <span class="dkr-string">painel-flask-app</span></code></pre>
+                </div>
+              </div>
+
+              <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div class="bg-card rounded-xl border border-border p-5">
+                  <h4 class="font-bold text-white mb-2">Processo principal</h4>
+                  <p class="text-sm text-muted leading-7">Cada container nasce para executar um processo principal e seu ciclo de vida depende desse processo.</p>
+                </div>
+                <div class="bg-card rounded-xl border border-border p-5">
+                  <h4 class="font-bold text-white mb-2">Camada gravável</h4>
+                  <p class="text-sm text-muted leading-7">O container ganha uma camada de escrita temporária sobre a imagem, útil para runtime mas descartável sem volume.</p>
+                </div>
+                <div class="bg-card rounded-xl border border-border p-5">
+                  <h4 class="font-bold text-white mb-2">Rede e portas</h4>
+                  <p class="text-sm text-muted leading-7">A comunicação externa normalmente depende de mapeamento de portas, como <code>8000:5000</code> em um serviço Flask.</p>
+                </div>
+                <div class="bg-card rounded-xl border border-border p-5">
+                  <h4 class="font-bold text-white mb-2">Efêmero por padrão</h4>
+                  <p class="text-sm text-muted leading-7">Se o container for removido, o estado local se perde, a menos que os dados estejam em volumes ou storage externo.</p>
+                </div>
+              </div>
+
+              <div class="flex justify-between pt-4">
+                <button onclick="showStep('step-dockerfile')" class="text-muted hover:text-white px-4 py-2 text-sm flex items-center gap-2">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                </button>
+                <button onclick="showStep('step-compose')" class="bg-card border border-border hover:border-accent hover:text-accent text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  Próximo: Compose <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 8 -->
+            <div id="step-compose" class="step-content space-y-8">
+              <div class="border-b border-border pb-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 rounded-full bg-violet-500/10 text-violet-400 text-xs font-mono font-bold border border-violet-500/20">PASSO 8</span>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Docker Compose, arquivo compose.yaml, volumes e redes</h2>
+                <p class="text-muted mt-2 leading-7">
+                  Depois do runtime básico, a próxima camada é a definição e a execução de múltiplos serviços. Aqui entra a diferença entre o arquivo declarativo da stack e a ferramenta que interpreta esse arquivo.
+                </p>
+              </div>
+
+              <div class="grid gap-6 md:grid-cols-2">
+                <div class="bg-card rounded-2xl border border-border p-6 flex gap-4">
+                  <i data-lucide="file-code" class="w-8 h-8 text-violet-400 flex-shrink-0"></i>
+                  <div>
+                    <h3 class="font-bold text-white mb-1">Arquivo de composição</h3>
+                    <p class="text-sm text-muted leading-7">
+                      O arquivo de definição normalmente aparece como <code>compose.yaml</code>, <code>compose.yml</code> ou, em projetos legados, <code>docker-compose.yml</code>. Ele declara <code>services</code>, <code>image</code>, <code>build</code>, variáveis, portas, <code>volumes</code> e <code>networks</code> em YAML.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6 flex gap-4">
+                  <i data-lucide="layout-template" class="w-8 h-8 text-blue-400 flex-shrink-0"></i>
+                  <div>
+                    <h3 class="font-bold text-white mb-1">Docker Compose (CLI)</h3>
+                    <p class="text-sm text-muted leading-7">
+                      É a ferramenta que interpreta o arquivo e reconcilia o ambiente. No padrão atual, o comando é <code>docker compose</code>. Em materiais mais antigos, você ainda pode encontrar <code>docker-compose</code>.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6 flex gap-4">
+                  <i data-lucide="hard-drive" class="w-8 h-8 text-pink-400 flex-shrink-0"></i>
+                  <div>
+                    <h3 class="font-bold text-white mb-1">Volume</h3>
+                    <p class="text-sm text-muted leading-7">
+                      Define persistência de dados fora do ciclo de vida do container. Isso é essencial para banco de dados, uploads, arquivos de cache e qualquer informação que não pode ser perdida ao recriar <code>services</code>.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6 flex gap-4">
+                  <i data-lucide="network" class="w-8 h-8 text-cyan-400 flex-shrink-0"></i>
+                  <div>
+                    <h3 class="font-bold text-white mb-1">Rede (<code>network</code>)</h3>
+                    <p class="text-sm text-muted leading-7">
+                      Define a conectividade entre <code>services</code>. Com uma <code>network</code> interna, o Flask pode falar com o MySQL usando nomes de <code>service</code> sem expor tudo externamente.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6 md:p-8">
+                <h3 class="text-xl font-bold text-white mb-3">Separação conceitual importante</h3>
+                <p class="text-muted leading-8">
+                  Em um documento técnico, vale manter a distinção explícita: o arquivo YAML descreve o estado desejado de uma aplicação com múltiplos serviços; o Docker Compose é a ferramenta que lê essa definição e aplica as mudanças necessárias no ambiente.
+                </p>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card overflow-hidden">
+                <div class="border-b border-border bg-base/40 px-6 py-4">
+                  <h3 class="text-xl font-bold text-white">Tabela comparativa dos conceitos</h3>
+                  <p class="mt-2 text-sm text-muted leading-7">
+                    Visão rápida do papel de cada elemento, do build até a execução da stack.
+                  </p>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-sm">
+                    <thead class="bg-white/[0.03] text-left">
+                      <tr>
+                        <th class="px-5 py-4 font-semibold text-white">Elemento</th>
+                        <th class="px-5 py-4 font-semibold text-white">Tipo</th>
+                        <th class="px-5 py-4 font-semibold text-white">Função técnica</th>
+                        <th class="px-5 py-4 font-semibold text-white">Quando entra</th>
+                        <th class="px-5 py-4 font-semibold text-white">Arquivo ou comando associado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="border-t border-border/80">
+                        <td class="px-5 py-4 text-white font-medium">Dockerfile</td>
+                        <td class="px-5 py-4 text-muted">Arquivo de build</td>
+                        <td class="px-5 py-4 text-muted">Descreve como a imagem será construída.</td>
+                        <td class="px-5 py-4 text-muted">Build</td>
+                        <td class="px-5 py-4 text-muted"><code>Dockerfile</code> e <code>docker build</code></td>
+                      </tr>
+                      <tr class="border-t border-border/80 bg-white/[0.02]">
+                        <td class="px-5 py-4 text-white font-medium">Imagem</td>
+                        <td class="px-5 py-4 text-muted">Artefato imutável</td>
+                        <td class="px-5 py-4 text-muted">Empacota runtime, código e configuração.</td>
+                        <td class="px-5 py-4 text-muted">Pós-build</td>
+                        <td class="px-5 py-4 text-muted"><code>docker build</code>, <code>docker pull</code>, <code>docker image ls</code></td>
+                      </tr>
+                      <tr class="border-t border-border/80">
+                        <td class="px-5 py-4 text-white font-medium">Container</td>
+                        <td class="px-5 py-4 text-muted">Instância em execução</td>
+                        <td class="px-5 py-4 text-muted">Executa a imagem como processo isolado.</td>
+                        <td class="px-5 py-4 text-muted">Execução</td>
+                        <td class="px-5 py-4 text-muted"><code>docker run</code>, <code>docker ps</code></td>
+                      </tr>
+                      <tr class="border-t border-border/80 bg-white/[0.02]">
+                        <td class="px-5 py-4 text-white font-medium">compose.yaml</td>
+                        <td class="px-5 py-4 text-muted">Arquivo declarativo</td>
+                        <td class="px-5 py-4 text-muted">Declara a stack com <code>services</code>, <code>volumes</code> e <code>networks</code>.</td>
+                        <td class="px-5 py-4 text-muted">Definição da stack</td>
+                        <td class="px-5 py-4 text-muted"><code>compose.yaml</code>, <code>compose.yml</code> ou <code>docker-compose.yml</code></td>
+                      </tr>
+                      <tr class="border-t border-border/80">
+                        <td class="px-5 py-4 text-white font-medium">Docker Compose</td>
+                        <td class="px-5 py-4 text-muted">Ferramenta CLI</td>
+                        <td class="px-5 py-4 text-muted">Aplica o arquivo e sobe ou atualiza a stack.</td>
+                        <td class="px-5 py-4 text-muted">Execução da stack</td>
+                        <td class="px-5 py-4 text-muted"><code>docker compose up</code>, <code>docker compose down</code></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card overflow-hidden">
+                <div class="border-b border-border bg-base/40 px-6 py-4">
+                  <h3 class="text-xl font-bold text-white">Tabela complementar da stack</h3>
+                  <p class="mt-2 text-sm text-muted leading-7">
+                    Aqui ficam os blocos operacionais mais usados dentro do arquivo de composição.
+                  </p>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-sm">
+                    <thead class="bg-white/[0.03] text-left">
+                      <tr>
+                        <th class="px-5 py-4 font-semibold text-white">Conceito</th>
+                        <th class="px-5 py-4 font-semibold text-white">O que representa</th>
+                        <th class="px-5 py-4 font-semibold text-white">Exemplo em compose.yaml</th>
+                        <th class="px-5 py-4 font-semibold text-white">Impacto prático</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class="border-t border-border/80">
+                        <td class="px-5 py-4 text-white font-medium"><code>service</code></td>
+                        <td class="px-5 py-4 text-muted">Um processo ou componente da aplicação.</td>
+                        <td class="px-5 py-4 text-muted"><code>flask_app</code>, <code>mysql_db</code></td>
+                        <td class="px-5 py-4 text-muted">Separa responsabilidades e facilita escalar ou reiniciar partes isoladas.</td>
+                      </tr>
+                      <tr class="border-t border-border/80 bg-white/[0.02]">
+                        <td class="px-5 py-4 text-white font-medium"><code>volume</code></td>
+                        <td class="px-5 py-4 text-muted">Armazenamento persistente fora do container.</td>
+                        <td class="px-5 py-4 text-muted"><code>dados_mysql:/var/lib/mysql</code></td>
+                        <td class="px-5 py-4 text-muted">Preserva dados mesmo após recriar ou atualizar containers.</td>
+                      </tr>
+                      <tr class="border-t border-border/80">
+                        <td class="px-5 py-4 text-white font-medium"><code>network</code></td>
+                        <td class="px-5 py-4 text-muted">Rede lógica entre serviços.</td>
+                        <td class="px-5 py-4 text-muted"><code>app_net</code>, rede padrão do Compose</td>
+                        <td class="px-5 py-4 text-muted">Permite comunicação por nome de serviço com mais isolamento e organização.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <h3 class="text-xl font-semibold text-white">Exemplo de stack Flask + MySQL</h3>
+                <div class="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
+                  <div class="px-4 py-2 border-b border-border bg-base/50 text-xs text-muted font-mono flex items-center gap-2">
+                    <i data-lucide="file-code" class="w-3 h-3"></i> compose.yaml
+                  </div>
+                  <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code>services:
+  flask_app:
+    build:
+      context: .
+    command: python main.py
+    ports:
+      - "8000:5000"
+    env_file:
+      - .env
+    environment:
+      FLASK_PORT: 5000
+      SECRET_KEY: troque-por-uma-chave-segura-aleatoria
+      DB_HOST: mysql_db
+      DB_PORT: 3306
+      DB_USER: eduportal_user
+      DB_PASSWORD: senha_app
+      DB_NAME: eduportal
+    depends_on:
+      - mysql_db
+    networks:
+      - app_net
+
+  mysql_db:
+    image: mysql:8
+    environment:
+      MYSQL_DATABASE: eduportal
+      MYSQL_USER: eduportal_user
+      MYSQL_PASSWORD: senha_app
+      MYSQL_ROOT_PASSWORD: senha_root
+    volumes:
+      - dados_mysql:/var/lib/mysql
+    networks:
+      - app_net
+
+volumes:
+  dados_mysql:
+
+networks:
+  app_net:</code></pre>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <h3 class="text-xl font-semibold text-white">Comando de execução</h3>
+                <div class="bg-card rounded-xl border border-border overflow-hidden shadow-lg">
+                  <div class="px-4 py-2 border-b border-border bg-base/50 text-xs text-muted font-mono flex items-center gap-2">
+                    <i data-lucide="terminal" class="w-3 h-3"></i> Terminal
+                  </div>
+                  <pre class="!border-0 !rounded-none !bg-transparent opacity-90"><code><span class="comment"># Lê o arquivo de composição, cria recursos e sobe os serviços Flask e MySQL</span>
+<span class="dkr-cmd">docker</span> compose up -d --build</code></pre>
+                </div>
+              </div>
+
+              <div class="flex justify-between pt-4">
+                <button onclick="showStep('step-container')" class="text-muted hover:text-white px-4 py-2 text-sm flex items-center gap-2">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                </button>
+                <button onclick="showStep('step-compose-compare')" class="bg-card border border-border hover:border-accent hover:text-accent text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  Proximo: comparar com Dockerfile <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 8A -->
+            <div id="step-compose-compare" class="step-content space-y-8">
+              <div class="border-b border-border pb-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 text-xs font-mono font-bold border border-amber-500/20">PASSO 8A</span>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Docker Compose x Dockerfile</h2>
+                <p class="text-muted mt-2 leading-7">
+                  Mesmo que muita gente fale "Docker Composer", o nome correto e Docker Compose. A duvida mais comum aqui e separar o arquivo de build do arquivo que organiza a stack.
+                </p>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6 md:p-8 border-l-4 border-l-amber-400">
+                <h3 class="text-xl font-bold text-white mb-4">Resposta curta</h3>
+                <div class="grid gap-4 md:grid-cols-3">
+                  <div class="rounded-xl border border-border bg-base/30 p-4">
+                    <p class="text-xs font-mono uppercase tracking-[0.18em] text-muted">Dockerfile</p>
+                    <p class="mt-2 text-sm text-muted leading-7">
+                      Define como a imagem sera montada: base, dependencias, copia de arquivos, variaveis e comando inicial.
+                    </p>
+                  </div>
+                  <div class="rounded-xl border border-border bg-base/30 p-4">
+                    <p class="text-xs font-mono uppercase tracking-[0.18em] text-muted">compose.yaml</p>
+                    <p class="mt-2 text-sm text-muted leading-7">
+                      Define como varios servicos vao rodar juntos: app, banco, portas, volumes, redes e dependencias.
+                    </p>
+                  </div>
+                  <div class="rounded-xl border border-border bg-base/30 p-4">
+                    <p class="text-xs font-mono uppercase tracking-[0.18em] text-muted">docker compose</p>
+                    <p class="mt-2 text-sm text-muted leading-7">
+                      E o comando que le o YAML, cria os recursos e sobe ou derruba a stack declarada.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid gap-5 lg:grid-cols-2">
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center">
+                      <i data-lucide="file-text" class="w-5 h-5 text-blue-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Quando usar Dockerfile</h3>
+                  </div>
+                  <div class="space-y-3 text-sm text-muted leading-7">
+                    <p>Quando voce precisa montar a imagem da aplicacao.</p>
+                    <p>Quando quer instalar pacotes, copiar codigo ou definir o comando de start.</p>
+                    <p>Quando o problema esta na construcao do ambiente da aplicacao.</p>
+                  </div>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-violet-500/15 flex items-center justify-center">
+                      <i data-lucide="layers-3" class="w-5 h-5 text-violet-400"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-white">Quando usar Compose</h3>
+                  </div>
+                  <div class="space-y-3 text-sm text-muted leading-7">
+                    <p>Quando voce precisa subir app, banco, cache ou fila em conjunto.</p>
+                    <p>Quando quer mapear portas, conectar redes e declarar volumes em um unico arquivo.</p>
+                    <p>Quando o problema esta na orquestracao local ou na stack de desenvolvimento.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card overflow-hidden">
+                <div class="border-b border-border bg-base/40 px-6 py-4">
+                  <h3 class="text-xl font-bold text-white">Comparacao direta</h3>
+                  <p class="mt-2 text-sm text-muted leading-7">
+                    Se a sua pergunta for "qual arquivo eu altero?", use esta regra simples.
+                  </p>
+                </div>
+                <div class="grid gap-px bg-border lg:grid-cols-3">
+                  <div class="bg-card p-6">
+                    <p class="text-xs font-mono uppercase tracking-[0.18em] text-muted">Cenario 1</p>
+                    <p class="mt-3 text-sm text-white">Quero mudar a versao do Python, instalar pacotes ou trocar o comando inicial.</p>
+                    <p class="mt-3 text-sm text-blue-300">Edite o Dockerfile.</p>
+                  </div>
+                  <div class="bg-card p-6">
+                    <p class="text-xs font-mono uppercase tracking-[0.18em] text-muted">Cenario 2</p>
+                    <p class="mt-3 text-sm text-white">Quero subir junto banco, porta, volume, variaveis e dependencia entre servicos.</p>
+                    <p class="mt-3 text-sm text-violet-300">Edite o compose.yaml.</p>
+                  </div>
+                  <div class="bg-card p-6">
+                    <p class="text-xs font-mono uppercase tracking-[0.18em] text-muted">Cenario 3</p>
+                    <p class="mt-3 text-sm text-white">Quero automatizar build e subida da stack com um comando so.</p>
+                    <p class="mt-3 text-sm text-emerald-300">Use <code>build: .</code> no compose e rode <code>docker compose up --build</code>.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-gradient-to-r from-amber-500/10 to-violet-500/10 p-6 md:p-8">
+                <h3 class="text-xl font-bold text-white mb-3">Regra que evita confusao</h3>
+                <p class="text-muted leading-8">
+                  Compose nao substitui o Dockerfile. Na pratica, o Compose pode apontar para <code>build: .</code>, mas isso apenas diz para ele usar o Dockerfile do projeto antes de subir os servicos. Um monta a imagem; o outro organiza a stack.
+                </p>
+              </div>
+
+              <div class="flex justify-between pt-4">
+                <button onclick="showStep('step-compose')" class="text-muted hover:text-white px-4 py-2 text-sm flex items-center gap-2">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                </button>
+                <button onclick="showStep('step-summary')" class="bg-card border border-border hover:border-accent hover:text-accent text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  Proximo: resumo tecnico <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 9 -->
+            <div id="step-summary" class="step-content space-y-8">
+              <div class="border-b border-border pb-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-mono font-bold border border-accent/20">PASSO 9</span>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Resumo técnico consolidado</h2>
+                <p class="text-muted mt-2 leading-7">
+                  Este bloco consolida os pontos técnicos essenciais da trilha. Use-o como síntese de consulta rápida, fechamento de aula ou base para documentação interna.
+                </p>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6 md:p-8">
+                <div class="space-y-5 text-sm text-muted leading-8">
+                  <p>
+                    <strong class="text-white">Finalidade:</strong> Docker serve para empacotar e executar aplicações em containers, garantindo que o sistema rode com as mesmas dependências e configurações em qualquer ambiente.
+                  </p>
+                  <p>
+                    <strong class="text-white">O que resolve:</strong> Resolve conflitos de dependências, diferenças entre ambientes, falhas no deploy e dificuldades de padronização entre equipes.
+                  </p>
+                  <p>
+                    <strong class="text-white">Instalação:</strong> Em Windows e macOS, o caminho mais simples é usar Docker Desktop. Em Linux, a abordagem mais comum é instalar o Docker Engine diretamente no sistema.
+                  </p>
+                  <p>
+                    <strong class="text-white">Adoção no mercado:</strong> Docker é associado a empresas de grande porte como Spotify, Walmart, Netflix, ZEISS, Pinterest e Itaú Unibanco.
+                  </p>
+                  <p>
+                    <strong class="text-white">Requisitos recomendados:</strong> CPU 64 bits com virtualização, 8 GB como mínimo prático, 16 GB recomendados e ao menos 20 GB livres em disco, preferindo 40 GB para trabalhar com folga.
+                  </p>
+                  <p>
+                    <strong class="text-white">Casos de uso:</strong> É usado para padronizar ambientes, acelerar a entrega de sistemas, facilitar testes, sustentar crescimento de aplicações e simplificar a operação de múltiplos serviços.
+                  </p>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-6">
+                <h3 class="text-xl font-bold text-white mb-3">Síntese final</h3>
+                <p class="text-muted leading-8">
+                  Docker tornou a infraestrutura mais previsível, portátil e escalável, ajudando equipes a desenvolver, testar e publicar aplicações com muito mais consistência.
+                </p>
+              </div>
+
+              <div class="flex justify-between pt-4 pb-20">
+                <button onclick="showStep('step-compose-compare')" class="text-muted hover:text-white px-4 py-2 text-sm flex items-center gap-2">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                </button>
+                <button onclick="showStep('step-companies')" class="bg-card border border-border hover:border-accent hover:text-accent text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  Próximo: referências <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 10 -->
+            <div id="step-companies" class="step-content space-y-8">
+              <div class="border-b border-border pb-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-mono font-bold border border-orange-500/20">PASSO 10</span>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Adoção em empresas</h2>
+                <p class="text-muted mt-2 leading-7">
+                  Este bloco funciona como referência de mercado. Ele mostra que o uso de containers e stacks padronizadas já está consolidado em ambientes corporativos e operações de grande porte.
+                </p>
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-5">
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <h3 class="font-bold text-white mb-3 flex items-center gap-2">
+                    <i data-lucide="building-2" class="w-4 h-4 text-orange-400"></i> Empresas conhecidas
+                  </h3>
+                  <p class="text-sm text-muted leading-7">
+                    Exemplos frequentemente citados em materiais e cases oficiais incluem Spotify, Walmart, Netflix, ZEISS, Pinterest, The New York Times e Itaú Unibanco.
+                  </p>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6">
+                  <h3 class="font-bold text-white mb-3 flex items-center gap-2">
+                    <i data-lucide="badge-check" class="w-4 h-4 text-emerald-400"></i> O que isso mostra?
+                  </h3>
+                  <p class="text-sm text-muted leading-7">
+                    Mostra que Docker é adotado tanto por empresas de tecnologia quanto por grandes organizações financeiras, varejo, mídia e indústria.
+                  </p>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-border bg-card p-6 md:p-8">
+                <h3 class="text-xl font-bold text-white mb-3">Síntese executiva</h3>
+                <p class="text-muted leading-8">
+                  O Docker é utilizado por empresas de grande porte porque melhora a consistência dos ambientes, acelera a publicação de sistemas e facilita a escalabilidade de aplicações.
+                </p>
+              </div>
+
+              <div class="flex justify-between pt-4">
+                <button onclick="showStep('step-summary')" class="text-muted hover:text-white px-4 py-2 text-sm flex items-center gap-2">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                </button>
+                <button onclick="showStep('step-examples')" class="bg-card border border-border hover:border-accent hover:text-accent text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                  Próximo: casos de uso <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 11 -->
+            <div id="step-examples" class="step-content space-y-8">
+              <div class="border-b border-border pb-6">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="px-3 py-1 rounded-full bg-pink-500/10 text-pink-400 text-xs font-mono font-bold border border-pink-500/20">PASSO 11</span>
+                </div>
+                <h2 class="text-3xl font-bold text-white">Casos de uso e cenários</h2>
+                <p class="text-muted mt-2 leading-7">
+                  Aqui entram cenários práticos de adoção. O objetivo é mostrar como os conceitos anteriores aparecem em situações concretas de entrega, operação e padronização.
+                </p>
+              </div>
+
+              <div class="grid gap-5">
+                <div class="bg-card rounded-2xl border border-border p-6 flex gap-4">
+                  <i data-lucide="brain" class="w-8 h-8 text-cyan-400 flex-shrink-0"></i>
+                  <div>
+                    <h3 class="font-bold text-white mb-1">ZEISS</h3>
+                    <p class="text-sm text-muted leading-7">
+                      Usa containers para distribuir e executar soluções com mais consistência entre ambientes, inclusive em cenários que envolvem tecnologia avançada e IA.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6 flex gap-4">
+                  <i data-lucide="shopping-cart" class="w-8 h-8 text-emerald-400 flex-shrink-0"></i>
+                  <div>
+                    <h3 class="font-bold text-white mb-1">Walmart</h3>
+                    <p class="text-sm text-muted leading-7">
+                      Pode usar Docker para validar e padronizar aplicações antes de ambientes com mais <code>services</code> e integrações, reduzindo problemas de consistência.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6 flex gap-4">
+                  <i data-lucide="landmark" class="w-8 h-8 text-orange-400 flex-shrink-0"></i>
+                  <div>
+                    <h3 class="font-bold text-white mb-1">Itaú Unibanco</h3>
+                    <p class="text-sm text-muted leading-7">
+                      Em um contexto corporativo de larga escala, containers ajudam a padronizar processos entre times, acelerar entregas e sustentar operações com muitos desenvolvedores.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="bg-card rounded-2xl border border-border p-6 flex gap-4">
+                  <i data-lucide="truck" class="w-8 h-8 text-pink-400 flex-shrink-0"></i>
+                  <div>
+                    <h3 class="font-bold text-white mb-1">Exemplo prático de equipe interna</h3>
+                    <p class="text-sm text-muted leading-7">
+                      Uma equipe pode subir front-end, API e banco com o mesmo padrão em notebooks diferentes, evitando retrabalho e eliminando diferenças de configuração entre os membros.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-between pt-4">
+                <button onclick="showStep('step-companies')" class="text-muted hover:text-white px-4 py-2 text-sm flex items-center gap-2">
+                  <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar
+                </button>
+                <button onclick="showStep('step-intro')" class="bg-accent hover:bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-lg shadow-accent/20">
+                  Voltar ao início <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="code-expand-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="code-expand-title">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="closeCodeModal()"></div>
+    <div class="relative z-10 flex min-h-screen items-center justify-center p-4 md:p-8">
+      <div class="w-full max-w-5xl overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
+        <div class="flex items-center justify-between gap-4 border-b border-border bg-base/70 px-5 py-4">
+          <div>
+            <p class="text-xs font-mono uppercase tracking-[0.18em] text-muted">Visualizacao ampliada</p>
+            <h3 id="code-expand-title" class="mt-1 text-lg font-semibold text-white">Dockerfile</h3>
+          </div>
+          <button type="button" onclick="closeCodeModal()" class="code-action-btn">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            <span>Fechar</span>
+          </button>
+        </div>
+        <div class="max-h-[75vh] overflow-auto p-5">
+          <pre class="!m-0"><code id="code-expand-content"></code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const drawer = document.getElementById('sidebar-drawer');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const codeExpandModal = document.getElementById('code-expand-modal');
+    const codeExpandTitle = document.getElementById('code-expand-title');
+    const codeExpandContent = document.getElementById('code-expand-content');
+
+    function openSidebar() {
+      drawer.classList.add('open');
+      backdrop.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      drawer.classList.remove('open');
+      backdrop.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function toggleNavGroup(groupName) {
+      const group = document.querySelector(`[data-group="${groupName}"]`);
+      if (!group) return;
+      group.classList.toggle('open');
+    }
+
+    function syncActiveButtons(stepId) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+      const leftBtn = document.querySelector(`button[onclick="showStep('${stepId}')"].nav-item`);
+      if (leftBtn) leftBtn.classList.add('active');
+    }
+
+    function showStep(stepId) {
+      document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+
+      const content = document.getElementById(stepId);
+      if (!content) return;
+
+      content.classList.remove('active');
+      void content.offsetWidth;
+      content.classList.add('active');
+
+      syncActiveButtons(stepId);
+
+      document.querySelector('main').scrollTop = 0;
+
+      if (window.innerWidth < 768) closeSidebar();
+    }
+
+    async function writeClipboardText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+
+      const helper = document.createElement('textarea');
+      helper.value = text;
+      helper.setAttribute('readonly', '');
+      helper.style.position = 'fixed';
+      helper.style.opacity = '0';
+      document.body.appendChild(helper);
+      helper.select();
+
+      let copied = false;
+
+      try {
+        copied = document.execCommand('copy');
+      } finally {
+        document.body.removeChild(helper);
+      }
+
+      return copied;
+    }
+
+    async function copyCode(button) {
+      const card = button.closest('[data-code-card]');
+      const code = card?.querySelector('code');
+      const label = button.querySelector('span');
+      if (!code || !label) return;
+
+      const originalLabel = label.textContent;
+      const source = code.textContent.replace(/\u00a0/g, ' ').trim();
+
+      try {
+        const copied = await writeClipboardText(source);
+        label.textContent = copied ? 'Copiado' : 'Falhou';
+      } catch (error) {
+        label.textContent = 'Falhou';
+      }
+
+      window.setTimeout(() => {
+        label.textContent = originalLabel;
+      }, 1600);
+    }
+
+    function expandCode(button) {
+      const card = button.closest('[data-code-card]');
+      const code = card?.querySelector('code');
+
+      if (!card || !code || !codeExpandModal || !codeExpandTitle || !codeExpandContent) return;
+
+      codeExpandTitle.textContent = card.dataset.codeTitle || 'Dockerfile';
+      codeExpandContent.innerHTML = code.innerHTML;
+      codeExpandModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCodeModal() {
+      if (!codeExpandModal || codeExpandModal.classList.contains('hidden')) return;
+
+      codeExpandModal.classList.add('hidden');
+      codeExpandContent.innerHTML = '';
+
+      if (!drawer.classList.contains('open')) {
+        document.body.style.overflow = '';
+      }
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        if (codeExpandModal && !codeExpandModal.classList.contains('hidden')) {
+          closeCodeModal();
+          return;
+        }
+
+        closeSidebar();
+      }
+    });
+
+    syncActiveButtons('step-intro');
+  </script>
+</body>
+</html>

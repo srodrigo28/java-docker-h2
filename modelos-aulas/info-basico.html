@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treinamento: Fundamentos da Informática</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body { background-color: #0f1214; color: #a3aab1; font-family: 'Inter', sans-serif; }
+        .card { background-color: #171d21; border-radius: 0.75rem; border: 1px solid #1f2937; }
+        .step-active { color: #a855f7; border-color: #a855f7; }
+        .step-inactive { color: #4b5563; border-color: #374151; }
+        .page-content { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .page-active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .kbd { background: #374151; color: #fff; padding: 0.2rem 0.5rem; border-radius: 0.375rem; font-family: monospace; font-size: 0.875rem; border-bottom: 2px solid #1f2937; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-6">
+
+<div class="w-full max-w-4xl card shadow-2xl overflow-hidden">
+    
+    <div class="p-6 border-b border-gray-800 bg-[#11161a]">
+        <h1 class="text-2xl font-bold text-white mb-6"><i class="fas fa-laptop-code text-purple-500 mr-2"></i> Trilha: Fundamentos & Produtividade</h1>
+        
+        <div class="flex items-center justify-between relative">
+            <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-gray-800 -z-10"></div>
+            
+            <div id="step-1" class="flex flex-col items-center step-active bg-[#11161a] px-2 transition-colors">
+                <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold bg-[#11161a] mb-2 step-active">1</div>
+                <span class="text-xs font-medium uppercase tracking-wider hidden sm:block">Sistemas</span>
+            </div>
+            
+            <div id="step-2" class="flex flex-col items-center step-inactive bg-[#11161a] px-2 transition-colors">
+                <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold bg-[#11161a] mb-2 step-inactive">2</div>
+                <span class="text-xs font-medium uppercase tracking-wider hidden sm:block">Hardware & Nuvem</span>
+            </div>
+            
+            <div id="step-3" class="flex flex-col items-center step-inactive bg-[#11161a] px-2 transition-colors">
+                <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold bg-[#11161a] mb-2 step-inactive">3</div>
+                <span class="text-xs font-medium uppercase tracking-wider hidden sm:block">Atalhos</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-1" class="page-content page-active p-6 sm:p-10">
+        <h2 class="text-xl font-semibold text-white mb-4">Módulo 1: O Universo dos Sistemas Operacionais</h2>
+        <p class="mb-6">O Sistema Operacional (SO) é a interface entre você e a máquina. Hoje, eles estão em todos os lugares, não apenas em computadores.</p>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <div class="bg-gray-800/30 p-4 rounded-lg border border-gray-700">
+                <h3 class="text-purple-400 font-bold mb-2"><i class="fas fa-mobile-alt mr-2"></i> Dispositivos</h3>
+                <ul class="list-disc list-inside text-sm space-y-1">
+                    <li>Celulares (Android, iOS)</li>
+                    <li>Computadores e Notebooks</li>
+                    <li>Relógios de Pulso (Smartwatches)</li>
+                    <li>Sistemas de Carro (Diagnóstico e Mídia)</li>
+                </ul>
+            </div>
+            <div class="bg-gray-800/30 p-4 rounded-lg border border-gray-700">
+                <h3 class="text-purple-400 font-bold mb-2"><i class="fas fa-desktop mr-2"></i> Famílias de SO (Desktop)</h3>
+                <ul class="list-disc list-inside text-sm space-y-1">
+                    <li><strong>Windows:</strong> Versões 8, 10, 11 Pro</li>
+                    <li><strong>Apple (macOS):</strong> Big Sur, Ventura, Monterey</li>
+                    <li><strong>Linux:</strong> Ubuntu, RedHat</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-2" class="page-content p-6 sm:p-10">
+        <h2 class="text-xl font-semibold text-white mb-4">Módulo 2: Hardware e Armazenamento</h2>
+        <p class="mb-6">Entenda as peças físicas que fazem o computador funcionar e como salvamos nossos arquivos modernos.</p>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="col-span-1 sm:col-span-2 bg-gray-800/30 p-4 rounded-lg border border-gray-700">
+                <h3 class="text-blue-400 font-bold mb-2"><i class="fas fa-microchip mr-2"></i> Componentes Físicos</h3>
+                <div class="space-y-2 text-sm">
+                    <p><strong>Placa Mãe:</strong> A espinha dorsal que conecta tudo.</p>
+                    <p><strong>Processador (CPU):</strong> O cérebro que realiza os cálculos.</p>
+                    <p><strong>Memória RAM:</strong> A mesa de trabalho (rápida, mas volátil).</p>
+                    <p><strong>SSD / Pendrive:</strong> A gaveta de arquivos (Armazenamento físico permanente).</p>
+                </div>
+            </div>
+            <div class="bg-gray-800/30 p-4 rounded-lg border border-gray-700">
+                <h3 class="text-blue-400 font-bold mb-2"><i class="fas fa-cloud mr-2"></i> A Nuvem</h3>
+                <p class="text-sm mb-3">Armazenamento remoto seguro. Você não depende do espaço físico do seu PC.</p>
+                <ul class="list-disc list-inside text-sm">
+                    <li>Google Drive</li>
+                    <li>Microsoft OneDrive</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-3" class="page-content p-6 sm:p-10">
+        <h2 class="text-xl font-semibold text-white mb-4">Módulo 3: Produtividade com Atalhos</h2>
+        <p class="mb-6">O mouse é bom, mas o teclado te torna um especialista. Teste esses atalhos essenciais:</p>
+        
+        <div class="bg-gray-800/30 p-5 rounded-lg border border-gray-700">
+            <h3 class="text-green-400 font-bold mb-4">Infos e Sistema</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-3 text-sm mb-6">
+                <div><span class="kbd">Win</span> + <span class="kbd">Pause Break</span> <span class="ml-2 text-gray-400">Info. Gerais do Computador</span></div>
+                <div><span class="kbd">Win</span> + <span class="kbd">E</span> <span class="ml-2 text-gray-400">Abre o Explorador de Arquivos</span></div>
+                <div><span class="kbd">Win</span> + <span class="kbd">D</span> <span class="ml-2 text-gray-400">Mostra a Área de Trabalho</span></div>
+            </div>
+            
+            <h3 class="text-green-400 font-bold mb-4 border-t border-gray-700 pt-4">Edição e Navegação</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-3 text-sm">
+                <div><span class="kbd">Ctrl</span> + <span class="kbd">C</span> / <span class="kbd">V</span> <span class="ml-2 text-gray-400">Copiar e Colar</span></div>
+                <div><span class="kbd">Ctrl</span> + <span class="kbd">Z</span> <span class="ml-2 text-gray-400">Desfazer última ação</span></div>
+                <div><span class="kbd">Ctrl</span> + <span class="kbd">A</span> <span class="ml-2 text-gray-400">Selecionar Tudo (Windows)</span></div>
+                <div><span class="kbd">Ctrl</span> + <span class="kbd">T</span> <span class="ml-2 text-gray-400">Nova Guia (Web) / Sel. Tudo (Office)</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-6 border-t border-gray-800 bg-[#11161a] flex justify-between items-center">
+        <button id="btn-prev" class="px-5 py-2 rounded-lg text-sm font-medium bg-gray-800 text-gray-300 hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <i class="fas fa-arrow-left mr-2"></i> Anterior
+        </button>
+        
+        <button id="btn-next" class="px-5 py-2 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-500 transition">
+            Próximo <i class="fas fa-arrow-right ml-2"></i>
+        </button>
+    </div>
+
+</div>
+
+<script>
+    // Lógica simples e robusta para paginação interativa
+    let currentPage = 1;
+    const totalPages = 3;
+    
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    
+    function updatePagination() {
+        // Esconde todas as páginas
+        for(let i = 1; i <= totalPages; i++) {
+            document.getElementById(`page-${i}`).classList.remove('page-active');
+            
+            // Atualiza os indicadores de passo (bolinhas)
+            const step = document.getElementById(`step-${i}`);
+            const stepCircle = step.querySelector('div');
+            
+            if(i <= currentPage) {
+                step.classList.add('step-active');
+                step.classList.remove('step-inactive');
+                stepCircle.classList.add('step-active');
+                stepCircle.classList.remove('step-inactive');
+            } else {
+                step.classList.remove('step-active');
+                step.classList.add('step-inactive');
+                stepCircle.classList.remove('step-active');
+                stepCircle.classList.add('step-inactive');
+            }
+        }
+        
+        // Mostra a página atual
+        document.getElementById(`page-${currentPage}`).classList.add('page-active');
+        
+        // Atualiza os botões
+        btnPrev.disabled = currentPage === 1;
+        
+        if (currentPage === totalPages) {
+            btnNext.innerHTML = 'Finalizar <i class="fas fa-check ml-2"></i>';
+            btnNext.classList.replace('bg-purple-600', 'bg-green-600');
+            btnNext.classList.replace('hover:bg-purple-500', 'hover:bg-green-500');
+        } else {
+            btnNext.innerHTML = 'Próximo <i class="fas fa-arrow-right ml-2"></i>';
+            btnNext.classList.replace('bg-green-600', 'bg-purple-600');
+            btnNext.classList.replace('hover:bg-green-500', 'hover:bg-purple-500');
+        }
+    }
+
+    btnNext.addEventListener('click', () => {
+        if(currentPage < totalPages) {
+            currentPage++;
+            updatePagination();
+        } else {
+            alert("Parabéns! Você concluiu o módulo.");
+        }
+    });
+
+    btnPrev.addEventListener('click', () => {
+        if(currentPage > 1) {
+            currentPage--;
+            updatePagination();
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -9,17 +9,32 @@ Projeto de exemplo com Spring Boot + H2 para praticar empacotamento e execucao c
 
 ## Estrutura do projeto
 ```text
-java-docker-h2/
-|- src/
-|  |- main/
-|  |  |- java/com/docker/api/ApiApplication.java
-|  |  |- resources/application.properties
-|  |- test/
-|     |- java/com/docker/api/ApiApplicationTests.java
-|- Dockerfile
-|- docker-compose.yml
-|- pom.xml
-|- README.md
+meu-projeto/
+├─ src/
+│  ├─ main/
+│  │  ├─ java/
+│  │  │  └─ com/seuprojeto/app/
+│  │  │     ├─ AppApplication.java
+│  │  │     ├─ controller/
+│  │  │     │  └─ ProdutoController.java
+│  │  │     ├─ service/
+│  │  │     │  └─ ProdutoService.java
+│  │  │     ├─ repository/
+│  │  │     │  └─ ProdutoRepository.java
+│  │  │     ├─ model/
+│  │  │     │  └─ Produto.java
+│  │  │     └─ dto/
+│  │  │        └─ ProdutoRequestDTO.java
+│  │  └─ resources/
+│  │     ├─ application.properties
+│  │     └─ data.sql
+│  └─ test/
+│     └─ java/
+├─ target/
+├─ Dockerfile
+├─ docker-compose.yml
+├─ pom.xml
+└─ README.md
 ```
 
 ## Pre-requisitos
@@ -29,7 +44,7 @@ java-docker-h2/
 ## Dockerfile explicado (linha a linha)
 ```dockerfile
 # Etapa 1: imagem com Maven + JDK para compilar o projeto
-FROM maven:3.9.11-eclipse-temurin-25 AS build
+FROM maven:3.9.11-eclipse-temurin-21 AS build
 
 # Diretorio de trabalho dentro do container
 WORKDIR /app
@@ -43,7 +58,7 @@ COPY src ./src
 RUN mvn -B -DskipTests package
 
 # Etapa 2: imagem final mais leve, so para executar
-FROM eclipse-temurin:25-jre
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # Copia o .jar gerado na etapa de build
@@ -84,6 +99,58 @@ docker compose up --build
 ```bash
 docker compose down
 ```
+
+## Plano do 1 CRUD: Produtos
+Objetivo inicial: cadastrar e listar produtos.
+
+### Campos do produto
+- `nome` (texto, obrigatorio)
+- `qtd` (inteiro, obrigatorio, minimo 0)
+- `valor` (decimal, obrigatorio, maior que 0)
+
+### Rotas da API
+1. `POST /produtos`
+   - Cadastra um novo produto.
+   - Body JSON:
+```json
+{
+  "nome": "Notebook",
+  "qtd": 10,
+  "valor": 3500.00
+}
+```
+2. `GET /produtos`
+   - Lista todos os produtos cadastrados.
+
+## Plano de testes (simples e sequencial)
+Objetivo: validar cada passo do CRUD com testes maduros e evolutivos.
+
+### Estrutura sugerida
+```text
+src/
+├─ test/
+│  ├─ java/com/docker/api/produto/
+│  │  └─ ProdutoCrudFluxoTest.java
+│  └─ resources/
+│     ├─ application-test.properties
+│     └─ data-test.sql
+```
+
+### Seeds para testes
+- Usar seeds apenas no ambiente de teste.
+- `data-test.sql` deve inserir dados controlados para os cenarios.
+- Perfil `test` com H2 em memoria para execucao rapida e isolada.
+
+### Ordem dos testes (passos)
+1. Cadastrar produto
+2. Listar produtos
+3. Buscar produto por id (proxima etapa)
+4. Atualizar produto (proxima etapa)
+5. Deletar produto (proxima etapa)
+
+### Como contar passos que deram certo
+- A contagem oficial deve vir do relatorio JUnit/Surefire (`tests run`, `failures`, `errors`).
+- Nao usar contador manual no codigo de producao.
 
 ## Troubleshooting rapido
 - Erro `failed to solve: lstat /target: no such file or directory`:
