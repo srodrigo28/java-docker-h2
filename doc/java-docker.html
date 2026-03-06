@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Treinamento Sequencial | Java + Docker + H2</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            base: 'var(--color-base)',
+            accent: 'var(--color-accent)',
+            text: 'var(--color-text)',
+            muted: 'var(--color-muted)',
+            card: 'var(--color-card)',
+            border: 'var(--color-border)',
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          }
+        },
+      },
+    };
+  </script>
+
+  <style>
+    :root {
+      --color-base: #0f172a;
+      --color-accent: #22c55e;
+      --color-text: #f8fafc;
+      --color-muted: #c3d0e3;
+      --color-card: #172033;
+      --color-border: #3b4c66;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      letter-spacing: -0.01em;
+    }
+
+    .bg-pattern {
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0),
+        radial-gradient(circle at 12px 12px, rgba(34, 197, 94, 0.09) 1px, transparent 0);
+      background-size: 24px 24px, 24px 24px;
+    }
+
+    .step-content {
+      display: none;
+      animation: fadeIn 0.28s ease;
+    }
+
+    .step-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .nav-item.active {
+      background: rgba(34, 197, 94, 0.18);
+      border-color: rgba(34, 197, 94, 0.35);
+      color: #f0fdf4;
+    }
+
+    .code-card {
+      border: 1px solid var(--color-border);
+      border-radius: 1rem;
+      overflow: hidden;
+      background: #0b1529;
+    }
+
+    .code-head {
+      background: rgba(9, 14, 27, 0.96);
+      border-bottom: 1px solid var(--color-border);
+      color: #e2e8f0;
+    }
+
+    .code-body {
+      overflow-x: auto;
+      padding: 1rem;
+      color: #e2e8f0;
+    }
+
+    pre,
+    code {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      color: #e2e8f0;
+    }
+
+    .text-muted {
+      color: var(--color-muted);
+    }
+
+    @media (max-width: 767px) {
+      #sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 40;
+        width: min(19rem, 84vw);
+        transform: translateX(-100%);
+        transition: transform .2s ease;
+      }
+
+      #sidebar.open {
+        transform: translateX(0);
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-base text-text bg-pattern min-h-screen flex overflow-x-hidden">
+  <div id="sidebar-backdrop" class="fixed inset-0 z-30 hidden bg-slate-950/70 md:hidden" onclick="closeSidebar()"></div>
+
+  <aside id="sidebar" class="w-72 shrink-0 border-r border-border bg-card/95 backdrop-blur-sm h-screen overflow-y-auto">
+    <div class="p-5 border-b border-border sticky top-0 bg-card z-10">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs uppercase tracking-[0.18em] text-muted">Treinamento</p>
+          <h1 class="text-lg font-extrabold text-white mt-1">Java + Docker + H2</h1>
+        </div>
+        <button class="md:hidden text-muted hover:text-white" onclick="closeSidebar()">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <nav class="p-4 space-y-2">
+      <button onclick="showStep('step-0')" class="nav-item active w-full text-left px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 flex items-center gap-3">
+        <span class="w-6 h-6 grid place-items-center rounded bg-white/10 text-xs font-mono">0</span>
+        <span>Introducao Java e Spring</span>
+      </button>
+      <button onclick="showStep('step-1')" class="nav-item w-full text-left px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 flex items-center gap-3">
+        <span class="w-6 h-6 grid place-items-center rounded bg-white/10 text-xs font-mono">1</span>
+        <span>Requisitos do ambiente</span>
+      </button>
+      <button onclick="showStep('step-2')" class="nav-item w-full text-left px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 flex items-center gap-3">
+        <span class="w-6 h-6 grid place-items-center rounded bg-white/10 text-xs font-mono">2</span>
+        <span>Dependencias do projeto</span>
+      </button>
+      <button onclick="showStep('step-3')" class="nav-item w-full text-left px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 flex items-center gap-3">
+        <span class="w-6 h-6 grid place-items-center rounded bg-white/10 text-xs font-mono">3</span>
+        <span>Estrutura e comandos</span>
+      </button>
+      <button onclick="showStep('step-topicos')" class="nav-item w-full text-left px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 flex items-center gap-3">
+        <span class="w-6 h-6 grid place-items-center rounded bg-white/10 text-[10px] font-mono">3A</span>
+        <span>Topicos principais</span>
+      </button>
+      <button onclick="showStep('step-4')" class="nav-item w-full text-left px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 flex items-center gap-3">
+        <span class="w-6 h-6 grid place-items-center rounded bg-white/10 text-xs font-mono">4</span>
+        <span>CRUD #1 produtos</span>
+      </button>
+      <button onclick="showStep('step-5')" class="nav-item w-full text-left px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 flex items-center gap-3">
+        <span class="w-6 h-6 grid place-items-center rounded bg-white/10 text-xs font-mono">5</span>
+        <span>Seeds e testes</span>
+      </button>
+      <button onclick="showStep('step-6')" class="nav-item w-full text-left px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 flex items-center gap-3">
+        <span class="w-6 h-6 grid place-items-center rounded bg-white/10 text-xs font-mono">6</span>
+        <span>Troubleshooting</span>
+      </button>
+      <button onclick="showStep('step-7')" class="nav-item w-full text-left px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 flex items-center gap-3">
+        <span class="w-6 h-6 grid place-items-center rounded bg-white/10 text-xs font-mono">7</span>
+        <span>Checklist final</span>
+      </button>
+    </nav>
+  </aside>
+
+  <main class="flex-1 min-w-0 h-screen overflow-y-auto">
+    <header class="md:hidden sticky top-0 z-20 border-b border-border bg-base/90 backdrop-blur px-4 py-3 flex items-center justify-between">
+      <div>
+        <p class="text-[11px] uppercase tracking-[0.16em] text-muted">Guia Sequencial</p>
+        <p class="text-sm font-semibold">Projeto Java Docker H2</p>
+      </div>
+      <button onclick="openSidebar()" class="border border-border rounded-lg px-3 py-2 text-xs font-semibold flex items-center gap-2">
+        <i data-lucide="menu" class="w-4 h-4"></i> Menu
+      </button>
+    </header>
+
+    <div class="px-4 py-6 md:px-6 md:py-10 xl:px-8 2xl:px-10">
+      <section class="w-full max-w-[1700px] 2xl:max-w-[1900px] mx-auto">
+
+        <div id="step-0" class="step-content active space-y-6">
+          <div class="border-b border-border pb-5">
+            <span class="text-xs font-bold text-accent uppercase tracking-[0.16em]">Passo 0</span>
+            <h2 class="text-3xl md:text-4xl font-extrabold mt-2">Introducao: Java e Spring Boot</h2>
+            <p class="text-muted mt-3 leading-7">Antes de entrar no Docker e no CRUD, alinhamos a base tecnologica do projeto: o que
+              e Java, quando surgiu, o que e Spring Boot e por que estamos usando essa stack.</p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <article class="rounded-2xl border border-border bg-card p-5">
+              <h3 class="font-bold text-white">O que e Java</h3>
+              <ul class="mt-3 text-sm text-muted space-y-2 list-disc pl-5">
+                <li>Linguagem orientada a objetos e multiplataforma (JVM).</li>
+                <li>Criada na Sun Microsystems, com lancamento inicial em <code>1995</code>.</li>
+                <li>Hoje mantida pela Oracle e amplamente usada em back-end corporativo.</li>
+              </ul>
+            </article>
+            <article class="rounded-2xl border border-border bg-card p-5">
+              <h3 class="font-bold text-white">O que e Spring Boot</h3>
+              <ul class="mt-3 text-sm text-muted space-y-2 list-disc pl-5">
+                <li>Framework do ecossistema Spring para acelerar APIs Java.</li>
+                <li>Projeto da Pivotal, primeira versao em <code>2014</code>.</li>
+                <li>Usamos para reduzir configuracao manual e focar em regra de negocio.</li>
+              </ul>
+            </article>
+          </div>
+
+          <article class="rounded-2xl border border-border bg-card p-5 text-sm text-muted leading-7">
+            Neste treinamento, vamos aplicar Java + Spring Boot em uma API real com Docker, H2 e testes sequenciais.
+            Objetivo pratico: sair com o CRUD inicial de produtos funcionando e documentado.
+          </article>
+        </div>
+
+        <div id="step-1" class="step-content space-y-6">
+          <div class="border-b border-border pb-5">
+            <span class="text-xs font-bold text-accent uppercase tracking-[0.16em]">Passo 1</span>
+            <h2 class="text-3xl font-extrabold mt-2">Requisitos do ambiente (detalhado)</h2>
+          </div>
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <ul class="text-sm text-muted space-y-3 list-disc pl-5 leading-7">
+              <li><strong class="text-white">Docker Desktop</strong> instalado e em execucao (build e runtime da API).</li>
+              <li><strong class="text-white">Java 21</strong> no host para rodar testes locais com <code>mvnw</code>.</li>
+              <li><strong class="text-white">Porta 8080</strong> livre para expor a aplicacao.</li>
+              <li><strong class="text-white">Arquivos base</strong>: <code>pom.xml</code>, <code>Dockerfile</code>, <code>docker-compose.yml</code>, <code>README.md</code>.</li>
+              <li><strong class="text-white">Git + terminal</strong> para acompanhar o passo a passo e validacoes.</li>
+            </ul>
+          </div>
+          <div class="code-card" data-copy="docker --version&#10;docker compose version&#10;java -version">
+            <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
+              <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Verificação rápida</p>
+              <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar</button>
+            </div>
+            <div class="code-body">
+              <pre><code>docker --version
+docker compose version
+java -version</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div id="step-2" class="step-content space-y-6">
+          <div class="border-b border-border pb-5">
+            <span class="text-xs font-bold text-accent uppercase tracking-[0.16em]">Passo 2</span>
+            <h2 class="text-3xl font-extrabold mt-2">Dependencias que estamos usando</h2>
+          </div>
+
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <ul class="text-sm text-muted space-y-2 list-disc pl-5 leading-7">
+              <li><code>spring-boot-starter-webmvc</code>: endpoints REST e camada web.</li>
+              <li><code>spring-boot-starter-data-jpa</code>: persistencia com JPA/Hibernate.</li>
+              <li><code>com.h2database:h2</code>: banco em memoria para treino local.</li>
+              <li><code>spring-boot-starter-validation</code>: validacao de entrada (DTO).</li>
+              <li><code>spring-boot-starter-test</code> + <code>spring-boot-webmvc-test</code>: testes da API com MockMvc.</li>
+              <li><code>spring-boot-h2console</code>: acesso visual ao banco H2 no navegador.</li>
+            </ul>
+          </div>
+
+          <div class="code-card" data-copy="org.springframework.boot:spring-boot-starter-webmvc&#10;org.springframework.boot:spring-boot-starter-data-jpa&#10;org.springframework.boot:spring-boot-starter-validation&#10;com.h2database:h2&#10;org.springframework.boot:spring-boot-starter-test&#10;org.springframework.boot:spring-boot-webmvc-test">
+            <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
+              <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Lista de dependencias (resumo)</p>
+              <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar lista</button>
+            </div>
+            <div class="code-body">
+              <pre><code>org.springframework.boot:spring-boot-starter-webmvc
+org.springframework.boot:spring-boot-starter-data-jpa
+org.springframework.boot:spring-boot-starter-validation
+com.h2database:h2
+org.springframework.boot:spring-boot-starter-test
+org.springframework.boot:spring-boot-webmvc-test</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <div id="step-3" class="step-content space-y-6">
+          <div class="border-b border-border pb-5">
+            <span class="text-xs font-bold text-accent uppercase tracking-[0.16em]">Passo 3</span>
+            <h2 class="text-3xl font-extrabold mt-2">Estrutura de projeto e comandos principais</h2>
+          </div>
+
+          <div class="code-card" data-copy="src/main/java/com/docker/api/controller/ProdutoController.java&#10;src/main/java/com/docker/api/service/ProdutoService.java&#10;src/main/java/com/docker/api/repository/ProdutoRepository.java&#10;src/main/java/com/docker/api/model/Produto.java&#10;src/main/java/com/docker/api/dto/ProdutoRequestDTO.java&#10;src/test/java/com/docker/api/produto/ProdutoCrudFluxoTest.java&#10;src/test/resources/application-test.properties&#10;src/test/resources/data-test.sql">
+            <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
+              <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Arquivos importantes</p>
+              <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar lista</button>
+            </div>
+            <div class="code-body">
+              <pre><code>src/main/java/com/docker/api/controller/ProdutoController.java
+src/main/java/com/docker/api/service/ProdutoService.java
+src/main/java/com/docker/api/repository/ProdutoRepository.java
+src/main/java/com/docker/api/model/Produto.java
+src/main/java/com/docker/api/dto/ProdutoRequestDTO.java
+src/test/java/com/docker/api/produto/ProdutoCrudFluxoTest.java
+src/test/resources/application-test.properties
+src/test/resources/data-test.sql</code></pre>
+            </div>
+          </div>
+
+          <div class="grid gap-4">
+            <div class="code-card" data-copy="docker compose up --build">
+              <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
+                <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Subir ambiente</p>
+                <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar</button>
+              </div>
+              <div class="code-body"><pre><code>docker compose up --build</code></pre></div>
+            </div>
+
+            <div class="code-card" data-copy="docker compose down">
+              <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
+                <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Parar ambiente</p>
+                <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar</button>
+              </div>
+              <div class="code-body"><pre><code>docker compose down</code></pre></div>
+            </div>
+          </div>
+          <article class="rounded-2xl border border-border bg-card p-5 text-sm text-muted leading-7">
+            Acesse: API <code>http://localhost:8080/produtos</code> e H2 console <code>http://localhost:8080/h2-console</code>.
+          </article>
+        </div>
+
+        <div id="step-topicos" class="step-content space-y-6">
+          <div class="border-b border-border pb-5">
+            <span class="text-xs font-bold text-accent uppercase tracking-[0.16em]">Passo 3A</span>
+            <h2 class="text-3xl font-extrabold mt-2">Topicos principais da stack</h2>
+            <p class="text-muted mt-2">Visao direta dos tres pilares do nosso projeto: SpringBoot, Dockerfile e Compose.</p>
+          </div>
+
+          <div class="grid gap-4 xl:grid-cols-3">
+            <article class="rounded-2xl border border-border bg-card p-5">
+              <h3 class="font-bold text-white">SpringBoot</h3>
+              <p class="text-sm text-muted mt-2 leading-7">
+                Responsavel pela API Java. Aqui ficam endpoints, validacoes, servicos e persistencia no H2.
+              </p>
+              <div class="code-card mt-4" data-copy="mvn spring-boot:run">
+                <div class="code-head px-3 py-2 flex items-center justify-between">
+                  <p class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted">Execucao local</p>
+                  <button onclick="copyFromCard(this)" class="text-[11px] font-semibold border border-border rounded px-2 py-1 hover:border-accent hover:text-accent">Copiar</button>
+                </div>
+                <div class="code-body"><pre><code>mvn spring-boot:run</code></pre></div>
+              </div>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-5">
+              <h3 class="font-bold text-white">Dockerfile</h3>
+              <p class="text-sm text-muted mt-2 leading-7">
+                Define como construir a imagem da API: base, copia de arquivos, build Maven e comando final do container.
+              </p>
+              <div class="code-card mt-4" data-copy="docker build -t java-docker-h2-app .">
+                <div class="code-head px-3 py-2 flex items-center justify-between">
+                  <p class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted">Build da imagem</p>
+                  <button onclick="copyFromCard(this)" class="text-[11px] font-semibold border border-border rounded px-2 py-1 hover:border-accent hover:text-accent">Copiar</button>
+                </div>
+                <div class="code-body"><pre><code>docker build -t java-docker-h2-app .</code></pre></div>
+              </div>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-5">
+              <h3 class="font-bold text-white">Compose</h3>
+              <p class="text-sm text-muted mt-2 leading-7">
+                Orquestra a subida da stack. Com um comando, sobe servico da API com porta e configuracoes declaradas.
+              </p>
+              <div class="code-card mt-4" data-copy="docker compose up --build">
+                <div class="code-head px-3 py-2 flex items-center justify-between">
+                  <p class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted">Subir stack</p>
+                  <button onclick="copyFromCard(this)" class="text-[11px] font-semibold border border-border rounded px-2 py-1 hover:border-accent hover:text-accent">Copiar</button>
+                </div>
+                <div class="code-body"><pre><code>docker compose up --build</code></pre></div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div id="step-4" class="step-content space-y-6">
+          <div class="border-b border-border pb-5">
+            <span class="text-xs font-bold text-accent uppercase tracking-[0.16em]">Passo 4</span>
+            <h2 class="text-3xl font-extrabold mt-2">CRUD #1: cadastro e listagem de produtos</h2>
+            <p class="text-muted mt-2">Campos: <code>nome</code>, <code>qtd</code>, <code>valor</code>.</p>
+          </div>
+
+          <div class="grid gap-4">
+            <div class="code-card" data-copy="curl -X POST http://localhost:8080/produtos -H \"Content-Type: application/json\" -d \"{\"nome\":\"Notebook\",\"qtd\":10,\"valor\":3500.00}\"">
+              <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
+                <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Rota 1 - POST /produtos</p>
+                <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar</button>
+              </div>
+              <div class="code-body"><pre><code>curl -X POST http://localhost:8080/produtos \
+  -H "Content-Type: application/json" \
+  -d "{\"nome\":\"Notebook\",\"qtd\":10,\"valor\":3500.00}"</code></pre></div>
+            </div>
+
+            <div class="code-card" data-copy="curl http://localhost:8080/produtos">
+              <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
+                <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Rota 2 - GET /produtos</p>
+                <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar</button>
+              </div>
+              <div class="code-body"><pre><code>curl http://localhost:8080/produtos</code></pre></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="step-5" class="step-content space-y-6">
+          <div class="border-b border-border pb-5">
+            <span class="text-xs font-bold text-accent uppercase tracking-[0.16em]">Passo 5</span>
+            <h2 class="text-3xl font-extrabold mt-2">Seeds e testes sequenciais</h2>
+          </div>
+
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <ul class="text-sm text-muted space-y-2 list-disc pl-5">
+              <li>Perfil de teste: <code>src/test/resources/application-test.properties</code></li>
+              <li>Seed inicial: <code>src/test/resources/data-test.sql</code></li>
+              <li>Fluxo sequencial: <code>ProdutoCrudFluxoTest</code></li>
+            </ul>
+          </div>
+
+          <div class="code-card" data-copy=".\\mvnw.cmd --% clean test -Dspring.profiles.active=test">
+            <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
+              <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Rodar testes</p>
+              <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar</button>
+            </div>
+            <div class="code-body"><pre><code>.\mvnw.cmd --% clean test -Dspring.profiles.active=test</code></pre></div>
+          </div>
+        </div>
+
+        <div id="step-6" class="step-content space-y-6">
+          <div class="border-b border-border pb-5">
+            <span class="text-xs font-bold text-accent uppercase tracking-[0.16em]">Passo 6</span>
+            <h2 class="text-3xl font-extrabold mt-2">Troubleshooting usado no projeto</h2>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <article class="rounded-2xl border border-border bg-card p-5 text-sm">
+              <h3 class="font-semibold text-white mb-2">Erro no build Docker compilando testes</h3>
+              <p class="text-muted">No Dockerfile use <code>-Dmaven.test.skip=true</code> no package para empacotar sem compilar testes.</p>
+            </article>
+            <article class="rounded-2xl border border-border bg-card p-5 text-sm">
+              <h3 class="font-semibold text-white mb-2">Boot 4 e testes web</h3>
+              <p class="text-muted">Adicionar dependência de teste <code>spring-boot-webmvc-test</code> e imports em pacote novo.</p>
+            </article>
+          </div>
+
+          <div class="code-card" data-copy="docker build -t java-docker-h2-app-test .">
+            <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
+              <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Validar imagem</p>
+              <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar</button>
+            </div>
+            <div class="code-body"><pre><code>docker build -t java-docker-h2-app-test .</code></pre></div>
+          </div>
+        </div>
+
+        <div id="step-7" class="step-content space-y-6 pb-14">
+          <div class="border-b border-border pb-5">
+            <span class="text-xs font-bold text-accent uppercase tracking-[0.16em]">Passo 7</span>
+            <h2 class="text-3xl font-extrabold mt-2">Checklist final de aula</h2>
+          </div>
+
+          <div class="rounded-2xl border border-cyan-300/40 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 p-6 text-white">
+            <ol class="space-y-3 text-sm md:text-base leading-7 text-white">
+              <li class="text-white">1. ✅ Requisitos validados (Docker + Java 21)</li>
+              <li class="text-white">2. 🚀 API subindo com <code class="text-white">docker compose up --build</code></li>
+              <li class="text-white">3. 📦 CRUD #1 funcionando: <code class="text-white">POST /produtos</code> e <code class="text-white">GET /produtos</code></li>
+              <li class="text-white">4. 🧪 Seeds e testes sequenciais passando</li>
+              <li class="text-white">5. 🐳 Imagem Docker buildada com sucesso</li>
+            </ol>
+          </div>
+
+          <div class="code-card" data-copy="docker compose up --build&#10;curl http://localhost:8080/produtos&#10;.\\mvnw.cmd --% clean test -Dspring.profiles.active=test">
+            <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
+              <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Comandos finais</p>
+              <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar tudo</button>
+            </div>
+            <div class="code-body"><pre><code>docker compose up --build
+curl http://localhost:8080/produtos
+.\mvnw.cmd --% clean test -Dspring.profiles.active=test</code></pre></div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      backdrop.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      backdrop.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function showStep(stepId) {
+      document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+      document.getElementById(stepId)?.classList.add('active');
+
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      const activeBtn = document.querySelector(`button[onclick=\"showStep('${stepId}')\"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      document.querySelector('main').scrollTop = 0;
+      if (window.innerWidth < 768) closeSidebar();
+    }
+
+    async function copyText(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+
+    async function copyFromCard(button) {
+      const original = button.textContent;
+      const card = button.closest('.code-card');
+      const content = card?.dataset?.copy;
+      if (!content) return;
+
+      try {
+        await copyText(content.replace(/&#10;/g, '\n'));
+        button.textContent = 'Copiado';
+      } catch (e) {
+        button.textContent = 'Falhou';
+      }
+
+      setTimeout(() => {
+        button.textContent = original;
+      }, 1300);
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeSidebar();
+    });
+  </script>
+</body>
+
+</html>
