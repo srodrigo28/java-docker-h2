@@ -171,10 +171,6 @@
         <span class="w-6 h-6 grid place-items-center rounded bg-white/10 text-xs font-mono">3</span>
         <span>Estrutura e comandos</span>
       </button>
-      <button onclick="showStep('step-topicos')" class="nav-item w-full text-left px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 flex items-center gap-3">
-        <span class="w-6 h-6 grid place-items-center rounded bg-white/10 text-[10px] font-mono">3A</span>
-        <span>Topicos principais</span>
-      </button>
       <button onclick="showStep('step-4')" class="nav-item w-full text-left px-4 py-3 rounded-xl border border-transparent hover:bg-white/5 flex items-center gap-3">
         <span class="w-6 h-6 grid place-items-center rounded bg-white/10 text-xs font-mono">4</span>
         <span>CRUD #1 produtos</span>
@@ -246,15 +242,79 @@
             <span class="text-xs font-bold text-accent uppercase tracking-[0.16em]">Passo 1</span>
             <h2 class="text-3xl font-extrabold mt-2">Requisitos do ambiente (detalhado)</h2>
           </div>
-          <div class="rounded-2xl border border-border bg-card p-5">
-            <ul class="text-sm text-muted space-y-3 list-disc pl-5 leading-7">
-              <li><strong class="text-white">Docker Desktop</strong> instalado e em execucao (build e runtime da API).</li>
-              <li><strong class="text-white">Java 21</strong> no host para rodar testes locais com <code>mvnw</code>.</li>
-              <li><strong class="text-white">Porta 8080</strong> livre para expor a aplicacao.</li>
-              <li><strong class="text-white">Arquivos base</strong>: <code>pom.xml</code>, <code>Dockerfile</code>, <code>docker-compose.yml</code>, <code>README.md</code>.</li>
-              <li><strong class="text-white">Git + terminal</strong> para acompanhar o passo a passo e validacoes.</li>
-            </ul>
+
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="box" class="w-4 h-4 text-cyan-300"></i> Docker Desktop
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Alta</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden">Necessário para build e runtime da API no container.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">Necessário para build e runtime da API no container.</p>
+              </details>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="coffee" class="w-4 h-4 text-amber-300"></i> Java 21
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Alta</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden">Necessário no host para rodar testes locais com <code>mvnw</code>.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">Necessário no host para rodar testes locais com <code>mvnw</code>.</p>
+              </details>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="plug-zap" class="w-4 h-4 text-emerald-300"></i> Porta 8080
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-orange-500/15 text-orange-200 border border-orange-400/30">Média</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden">A porta de exposição da API deve estar livre.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">A porta de exposição da API deve estar livre.</p>
+              </details>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="files" class="w-4 h-4 text-violet-300"></i> Arquivos base
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Alta</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden">Ter no projeto: <code>pom.xml</code>, <code>Dockerfile</code>, <code>docker-compose.yml</code> e <code>README.md</code>.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">Ter no projeto: <code>pom.xml</code>, <code>Dockerfile</code>, <code>docker-compose.yml</code> e <code>README.md</code>.</p>
+              </details>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4 md:col-span-2 xl:col-span-1">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="terminal-square" class="w-4 h-4 text-sky-300"></i> Git + terminal
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-orange-500/15 text-orange-200 border border-orange-400/30">Média</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden">Importante para acompanhar o passo a passo e validar comandos.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">Importante para acompanhar o passo a passo e validar comandos.</p>
+              </details>
+            </article>
           </div>
+
           <div class="code-card" data-copy="docker --version&#10;docker compose version&#10;java -version">
             <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
               <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Verificação rápida</p>
@@ -274,15 +334,90 @@ java -version</code></pre>
             <h2 class="text-3xl font-extrabold mt-2">Dependencias que estamos usando</h2>
           </div>
 
-          <div class="rounded-2xl border border-border bg-card p-5">
-            <ul class="text-sm text-muted space-y-2 list-disc pl-5 leading-7">
-              <li><code>spring-boot-starter-webmvc</code>: endpoints REST e camada web.</li>
-              <li><code>spring-boot-starter-data-jpa</code>: persistencia com JPA/Hibernate.</li>
-              <li><code>com.h2database:h2</code>: banco em memoria para treino local.</li>
-              <li><code>spring-boot-starter-validation</code>: validacao de entrada (DTO).</li>
-              <li><code>spring-boot-starter-test</code> + <code>spring-boot-webmvc-test</code>: testes da API com MockMvc.</li>
-              <li><code>spring-boot-h2console</code>: acesso visual ao banco H2 no navegador.</li>
-            </ul>
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="globe" class="w-4 h-4 text-sky-300"></i> Web MVC
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Alta</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden"><code>spring-boot-starter-webmvc</code> para endpoints REST e camada web.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2"><code>spring-boot-starter-webmvc</code> para endpoints REST e camada web.</p>
+              </details>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="database" class="w-4 h-4 text-emerald-300"></i> JPA + Hibernate
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Alta</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden"><code>spring-boot-starter-data-jpa</code> para persistencia e repositorios.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2"><code>spring-boot-starter-data-jpa</code> para persistencia e repositorios.</p>
+              </details>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="hard-drive" class="w-4 h-4 text-amber-300"></i> H2 Database
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-orange-500/15 text-orange-200 border border-orange-400/30">Média</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden"><code>com.h2database:h2</code> para banco em memoria no treino local.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2"><code>com.h2database:h2</code> para banco em memoria no treino local.</p>
+              </details>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="shield-check" class="w-4 h-4 text-lime-300"></i> Validation
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-orange-500/15 text-orange-200 border border-orange-400/30">Média</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden"><code>spring-boot-starter-validation</code> para validar DTOs de entrada.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2"><code>spring-boot-starter-validation</code> para validar DTOs de entrada.</p>
+              </details>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="flask-conical" class="w-4 h-4 text-fuchsia-300"></i> Testes
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Alta</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden"><code>spring-boot-starter-test</code> + <code>spring-boot-webmvc-test</code> para testes com MockMvc.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2"><code>spring-boot-starter-test</code> + <code>spring-boot-webmvc-test</code> para testes com MockMvc.</p>
+              </details>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="monitor" class="w-4 h-4 text-violet-300"></i> H2 Console
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-orange-500/15 text-orange-200 border border-orange-400/30">Média</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden"><code>spring-boot-h2console</code> para inspeção visual de dados no navegador.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2"><code>spring-boot-h2console</code> para inspeção visual de dados no navegador.</p>
+              </details>
+            </article>
           </div>
 
           <div class="code-card" data-copy="org.springframework.boot:spring-boot-starter-webmvc&#10;org.springframework.boot:spring-boot-starter-data-jpa&#10;org.springframework.boot:spring-boot-starter-validation&#10;com.h2database:h2&#10;org.springframework.boot:spring-boot-starter-test&#10;org.springframework.boot:spring-boot-webmvc-test">
@@ -307,6 +442,50 @@ org.springframework.boot:spring-boot-webmvc-test</code></pre>
             <h2 class="text-3xl font-extrabold mt-2">Estrutura de projeto e comandos principais</h2>
           </div>
 
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="layers" class="w-4 h-4 text-cyan-300"></i> Camadas da API
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Alta</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden">Separação em controller, service, repository, model e dto.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">Separação em controller, service, repository, model e dto.</p>
+              </details>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="flask-conical" class="w-4 h-4 text-fuchsia-300"></i> Pasta de testes
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-orange-500/15 text-orange-200 border border-orange-400/30">Média</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden">Testes em <code>src/test</code> com profile <code>test</code> e seeds.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">Testes em <code>src/test</code> com profile <code>test</code> e seeds.</p>
+              </details>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="package" class="w-4 h-4 text-emerald-300"></i> Build com Docker
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Alta</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden">Dockerfile multi-stage para gerar e executar o jar da aplicação.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">Dockerfile multi-stage para gerar e executar o jar da aplicação.</p>
+              </details>
+            </article>
+          </div>
+
           <div class="code-card" data-copy="src/main/java/com/docker/api/controller/ProdutoController.java&#10;src/main/java/com/docker/api/service/ProdutoService.java&#10;src/main/java/com/docker/api/repository/ProdutoRepository.java&#10;src/main/java/com/docker/api/model/Produto.java&#10;src/main/java/com/docker/api/dto/ProdutoRequestDTO.java&#10;src/test/java/com/docker/api/produto/ProdutoCrudFluxoTest.java&#10;src/test/resources/application-test.properties&#10;src/test/resources/data-test.sql">
             <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
               <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Arquivos importantes</p>
@@ -324,7 +503,7 @@ src/test/resources/data-test.sql</code></pre>
             </div>
           </div>
 
-          <div class="grid gap-4">
+          <div class="grid gap-4 lg:grid-cols-2">
             <div class="code-card" data-copy="docker compose up --build">
               <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
                 <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Subir ambiente</p>
@@ -341,61 +520,18 @@ src/test/resources/data-test.sql</code></pre>
               <div class="code-body"><pre><code>docker compose down</code></pre></div>
             </div>
           </div>
+
+          <div class="code-card" data-copy=".\\mvnw.cmd --% clean test -Dspring.profiles.active=test">
+            <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
+              <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Validar fluxo completo</p>
+              <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar</button>
+            </div>
+            <div class="code-body"><pre><code>.\mvnw.cmd --% clean test -Dspring.profiles.active=test</code></pre></div>
+          </div>
+
           <article class="rounded-2xl border border-border bg-card p-5 text-sm text-muted leading-7">
             Acesse: API <code>http://localhost:8080/produtos</code> e H2 console <code>http://localhost:8080/h2-console</code>.
           </article>
-        </div>
-
-        <div id="step-topicos" class="step-content space-y-6">
-          <div class="border-b border-border pb-5">
-            <span class="text-xs font-bold text-accent uppercase tracking-[0.16em]">Passo 3A</span>
-            <h2 class="text-3xl font-extrabold mt-2">Topicos principais da stack</h2>
-            <p class="text-muted mt-2">Visao direta dos tres pilares do nosso projeto: SpringBoot, Dockerfile e Compose.</p>
-          </div>
-
-          <div class="grid gap-4 xl:grid-cols-3">
-            <article class="rounded-2xl border border-border bg-card p-5">
-              <h3 class="font-bold text-white">SpringBoot</h3>
-              <p class="text-sm text-muted mt-2 leading-7">
-                Responsavel pela API Java. Aqui ficam endpoints, validacoes, servicos e persistencia no H2.
-              </p>
-              <div class="code-card mt-4" data-copy="mvn spring-boot:run">
-                <div class="code-head px-3 py-2 flex items-center justify-between">
-                  <p class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted">Execucao local</p>
-                  <button onclick="copyFromCard(this)" class="text-[11px] font-semibold border border-border rounded px-2 py-1 hover:border-accent hover:text-accent">Copiar</button>
-                </div>
-                <div class="code-body"><pre><code>mvn spring-boot:run</code></pre></div>
-              </div>
-            </article>
-
-            <article class="rounded-2xl border border-border bg-card p-5">
-              <h3 class="font-bold text-white">Dockerfile</h3>
-              <p class="text-sm text-muted mt-2 leading-7">
-                Define como construir a imagem da API: base, copia de arquivos, build Maven e comando final do container.
-              </p>
-              <div class="code-card mt-4" data-copy="docker build -t java-docker-h2-app .">
-                <div class="code-head px-3 py-2 flex items-center justify-between">
-                  <p class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted">Build da imagem</p>
-                  <button onclick="copyFromCard(this)" class="text-[11px] font-semibold border border-border rounded px-2 py-1 hover:border-accent hover:text-accent">Copiar</button>
-                </div>
-                <div class="code-body"><pre><code>docker build -t java-docker-h2-app .</code></pre></div>
-              </div>
-            </article>
-
-            <article class="rounded-2xl border border-border bg-card p-5">
-              <h3 class="font-bold text-white">Compose</h3>
-              <p class="text-sm text-muted mt-2 leading-7">
-                Orquestra a subida da stack. Com um comando, sobe servico da API com porta e configuracoes declaradas.
-              </p>
-              <div class="code-card mt-4" data-copy="docker compose up --build">
-                <div class="code-head px-3 py-2 flex items-center justify-between">
-                  <p class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted">Subir stack</p>
-                  <button onclick="copyFromCard(this)" class="text-[11px] font-semibold border border-border rounded px-2 py-1 hover:border-accent hover:text-accent">Copiar</button>
-                </div>
-                <div class="code-body"><pre><code>docker compose up --build</code></pre></div>
-              </div>
-            </article>
-          </div>
         </div>
 
         <div id="step-4" class="step-content space-y-6">
@@ -405,24 +541,50 @@ src/test/resources/data-test.sql</code></pre>
             <p class="text-muted mt-2">Campos: <code>nome</code>, <code>qtd</code>, <code>valor</code>.</p>
           </div>
 
-          <div class="grid gap-4">
-            <div class="code-card" data-copy="curl -X POST http://localhost:8080/produtos -H \"Content-Type: application/json\" -d \"{\"nome\":\"Notebook\",\"qtd\":10,\"valor\":3500.00}\"">
-              <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
-                <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Rota 1 - POST /produtos</p>
-                <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar</button>
+          <div class="grid gap-4 md:grid-cols-2">
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-300"></i> Cadastro de produto
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Alta</span>
               </div>
-              <div class="code-body"><pre><code>curl -X POST http://localhost:8080/produtos \
+              <p class="text-sm text-muted mt-2 md:block hidden">Endpoint <code>POST /produtos</code> para inserir novo item.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">Endpoint <code>POST /produtos</code> para inserir novo item.</p>
+              </details>
+              <div class="code-card mt-4" data-copy="curl -X POST http://localhost:8080/produtos -H \"Content-Type: application/json\" -d \"{\"nome\":\"Notebook\",\"qtd\":10,\"valor\":3500.00}\"">
+                <div class="code-head px-3 py-2 flex items-center justify-between gap-2">
+                  <p class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted">POST /produtos</p>
+                  <button onclick="copyFromCard(this)" class="text-[11px] font-semibold border border-border rounded px-2 py-1 hover:border-accent hover:text-accent">Copiar</button>
+                </div>
+                <div class="code-body"><pre><code>curl -X POST http://localhost:8080/produtos \
   -H "Content-Type: application/json" \
   -d "{\"nome\":\"Notebook\",\"qtd\":10,\"valor\":3500.00}"</code></pre></div>
-            </div>
-
-            <div class="code-card" data-copy="curl http://localhost:8080/produtos">
-              <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
-                <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Rota 2 - GET /produtos</p>
-                <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar</button>
               </div>
-              <div class="code-body"><pre><code>curl http://localhost:8080/produtos</code></pre></div>
-            </div>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="list" class="w-4 h-4 text-sky-300"></i> Listagem de produtos
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Alta</span>
+              </div>
+              <p class="text-sm text-muted mt-2 md:block hidden">Endpoint <code>GET /produtos</code> para retornar todos os registros.</p>
+              <details class="md:hidden mt-2">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">Endpoint <code>GET /produtos</code> para retornar todos os registros.</p>
+              </details>
+              <div class="code-card mt-4" data-copy="curl http://localhost:8080/produtos">
+                <div class="code-head px-3 py-2 flex items-center justify-between gap-2">
+                  <p class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted">GET /produtos</p>
+                  <button onclick="copyFromCard(this)" class="text-[11px] font-semibold border border-border rounded px-2 py-1 hover:border-accent hover:text-accent">Copiar</button>
+                </div>
+                <div class="code-body"><pre><code>curl http://localhost:8080/produtos</code></pre></div>
+              </div>
+            </article>
           </div>
         </div>
 
@@ -440,9 +602,88 @@ src/test/resources/data-test.sql</code></pre>
             </ul>
           </div>
 
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="seedling" class="w-4 h-4 text-emerald-300"></i> Seed base (1 produto)
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Alta</span>
+              </div>
+              <p class="text-sm text-muted mt-2 mb-4 leading-7 md:block hidden">Use este seed mínimo para iniciar o teste com estado previsível.</p>
+              <details class="md:hidden mt-2 mb-4">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">Use este seed mínimo para iniciar o teste com estado previsível.</p>
+              </details>
+              <div class="code-card" data-copy="INSERT INTO produtos (nome, qtd, valor) VALUES ('Produto Seed', 5, 19.90);">
+                <div class="code-head px-3 py-2 flex items-center justify-between gap-2">
+                  <p class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted">data-test.sql</p>
+                  <button onclick="copyFromCard(this)" class="text-[11px] font-semibold border border-border rounded px-2 py-1 hover:border-accent hover:text-accent">Copiar</button>
+                </div>
+                <div class="code-body"><pre><code>INSERT INTO produtos (nome, qtd, valor)
+VALUES ('Produto Seed', 5, 19.90);</code></pre></div>
+              </div>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="rows-3" class="w-4 h-4 text-sky-300"></i> Seed com multiplos itens
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-orange-500/15 text-orange-200 border border-orange-400/30">Média</span>
+              </div>
+              <p class="text-sm text-muted mt-2 mb-4 leading-7 md:block hidden">Bom para testar listagem, volume inicial e paginação futura.</p>
+              <details class="md:hidden mt-2 mb-4">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">Bom para testar listagem, volume inicial e paginação futura.</p>
+              </details>
+              <div class="code-card" data-copy="INSERT INTO produtos (nome, qtd, valor) VALUES ('Teclado', 8, 129.90);&#10;INSERT INTO produtos (nome, qtd, valor) VALUES ('Mouse', 12, 89.90);&#10;INSERT INTO produtos (nome, qtd, valor) VALUES ('Monitor', 3, 999.90);">
+                <div class="code-head px-3 py-2 flex items-center justify-between gap-2">
+                  <p class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted">data-test.sql</p>
+                  <button onclick="copyFromCard(this)" class="text-[11px] font-semibold border border-border rounded px-2 py-1 hover:border-accent hover:text-accent">Copiar</button>
+                </div>
+                <div class="code-body"><pre><code>INSERT INTO produtos (nome, qtd, valor) VALUES ('Teclado', 8, 129.90);
+INSERT INTO produtos (nome, qtd, valor) VALUES ('Mouse', 12, 89.90);
+INSERT INTO produtos (nome, qtd, valor) VALUES ('Monitor', 3, 999.90);</code></pre></div>
+              </div>
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white flex items-center gap-2">
+                  <i data-lucide="refresh-cw" class="w-4 h-4 text-violet-300"></i> Reset de seed (idempotente)
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Alta</span>
+              </div>
+              <p class="text-sm text-muted mt-2 mb-4 leading-7 md:block hidden">Boa prática para evitar sujeira entre execuções e manter testes repetíveis.</p>
+              <details class="md:hidden mt-2 mb-4">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-sm text-muted mt-2">Boa prática para evitar sujeira entre execuções e manter testes repetíveis.</p>
+              </details>
+              <div class="code-card" data-copy="DELETE FROM produtos;&#10;INSERT INTO produtos (nome, qtd, valor) VALUES ('Produto Seed', 5, 19.90);">
+                <div class="code-head px-3 py-2 flex items-center justify-between gap-2">
+                  <p class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted">data-test.sql</p>
+                  <button onclick="copyFromCard(this)" class="text-[11px] font-semibold border border-border rounded px-2 py-1 hover:border-accent hover:text-accent">Copiar</button>
+                </div>
+                <div class="code-body"><pre><code>DELETE FROM produtos;
+INSERT INTO produtos (nome, qtd, valor)
+VALUES ('Produto Seed', 5, 19.90);</code></pre></div>
+              </div>
+            </article>
+          </div>
+
+          <div class="rounded-2xl border border-border bg-card p-5">
+            <h3 class="font-semibold text-white mb-3">Fixação rápida: por que usar seeds?</h3>
+            <ul class="text-sm text-muted space-y-2 list-disc pl-5 leading-7">
+              <li>Garante estado inicial previsível para cada execução.</li>
+              <li>Reduz flakiness em testes de listagem e integração.</li>
+              <li>Facilita reproduzir cenários no time inteiro.</li>
+            </ul>
+          </div>
+
           <div class="code-card" data-copy=".\\mvnw.cmd --% clean test -Dspring.profiles.active=test">
             <div class="code-head px-4 py-3 flex items-center justify-between gap-3">
-              <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Rodar testes</p>
+              <p class="text-xs font-mono uppercase tracking-[0.16em] text-muted">Executar suite com seed</p>
               <button onclick="copyFromCard(this)" class="text-xs font-semibold border border-border rounded-lg px-3 py-1.5 hover:border-accent hover:text-accent">Copiar</button>
             </div>
             <div class="code-body"><pre><code>.\mvnw.cmd --% clean test -Dspring.profiles.active=test</code></pre></div>
@@ -455,14 +696,45 @@ src/test/resources/data-test.sql</code></pre>
             <h2 class="text-3xl font-extrabold mt-2">Troubleshooting usado no projeto</h2>
           </div>
 
-          <div class="grid gap-4 md:grid-cols-2">
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <article class="rounded-2xl border border-border bg-card p-5 text-sm">
-              <h3 class="font-semibold text-white mb-2">Erro no build Docker compilando testes</h3>
-              <p class="text-muted">No Dockerfile use <code>-Dmaven.test.skip=true</code> no package para empacotar sem compilar testes.</p>
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white mb-2 flex items-center gap-2">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-300"></i> Build Docker compilando testes
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Crítico</span>
+              </div>
+              <p class="text-muted md:block hidden">No Dockerfile use <code>-Dmaven.test.skip=true</code> no package para empacotar sem compilar testes.</p>
+              <details class="md:hidden mt-1">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-muted mt-2">No Dockerfile use <code>-Dmaven.test.skip=true</code> no package para empacotar sem compilar testes.</p>
+              </details>
             </article>
             <article class="rounded-2xl border border-border bg-card p-5 text-sm">
-              <h3 class="font-semibold text-white mb-2">Boot 4 e testes web</h3>
-              <p class="text-muted">Adicionar dependência de teste <code>spring-boot-webmvc-test</code> e imports em pacote novo.</p>
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white mb-2 flex items-center gap-2">
+                  <i data-lucide="bug" class="w-4 h-4 text-rose-300"></i> Boot 4 e testes web
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-red-500/15 text-red-200 border border-red-400/30">Crítico</span>
+              </div>
+              <p class="text-muted md:block hidden">Adicionar dependência de teste <code>spring-boot-webmvc-test</code> e ajustar imports no pacote novo.</p>
+              <details class="md:hidden mt-1">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-muted mt-2">Adicionar dependência de teste <code>spring-boot-webmvc-test</code> e ajustar imports no pacote novo.</p>
+              </details>
+            </article>
+            <article class="rounded-2xl border border-border bg-card p-5 text-sm md:col-span-2 xl:col-span-1">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-semibold text-white mb-2 flex items-center gap-2">
+                  <i data-lucide="wrench" class="w-4 h-4 text-cyan-300"></i> Diagnóstico rápido
+                </h3>
+                <span class="text-[11px] px-2 py-1 rounded-full bg-orange-500/15 text-orange-200 border border-orange-400/30">Média</span>
+              </div>
+              <p class="text-muted md:block hidden">Sempre valide em duas camadas: <code>mvn test</code> no host e <code>docker build</code> na imagem.</p>
+              <details class="md:hidden mt-1">
+                <summary class="cursor-pointer text-xs font-semibold text-cyan-200">Saiba mais</summary>
+                <p class="text-muted mt-2">Sempre valide em duas camadas: <code>mvn test</code> no host e <code>docker build</code> na imagem.</p>
+              </details>
             </article>
           </div>
 
@@ -482,13 +754,28 @@ src/test/resources/data-test.sql</code></pre>
           </div>
 
           <div class="rounded-2xl border border-cyan-300/40 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 p-6 text-white">
-            <ol class="space-y-3 text-sm md:text-base leading-7 text-white">
-              <li class="text-white">1. ✅ Requisitos validados (Docker + Java 21)</li>
-              <li class="text-white">2. 🚀 API subindo com <code class="text-white">docker compose up --build</code></li>
-              <li class="text-white">3. 📦 CRUD #1 funcionando: <code class="text-white">POST /produtos</code> e <code class="text-white">GET /produtos</code></li>
-              <li class="text-white">4. 🧪 Seeds e testes sequenciais passando</li>
-              <li class="text-white">5. 🐳 Imagem Docker buildada com sucesso</li>
-            </ol>
+            <div class="grid gap-3 md:grid-cols-2">
+              <article class="rounded-xl border border-white/20 bg-white/5 p-3 text-white">
+                <p class="text-xs uppercase tracking-[0.16em] text-cyan-100">Checkpoint 1</p>
+                <p class="mt-1">✅ Requisitos validados (Docker + Java 21)</p>
+              </article>
+              <article class="rounded-xl border border-white/20 bg-white/5 p-3 text-white">
+                <p class="text-xs uppercase tracking-[0.16em] text-cyan-100">Checkpoint 2</p>
+                <p class="mt-1">🚀 API subindo com <code class="text-white">docker compose up --build</code></p>
+              </article>
+              <article class="rounded-xl border border-white/20 bg-white/5 p-3 text-white">
+                <p class="text-xs uppercase tracking-[0.16em] text-cyan-100">Checkpoint 3</p>
+                <p class="mt-1">📦 CRUD #1 funcionando: <code class="text-white">POST /produtos</code> e <code class="text-white">GET /produtos</code></p>
+              </article>
+              <article class="rounded-xl border border-white/20 bg-white/5 p-3 text-white">
+                <p class="text-xs uppercase tracking-[0.16em] text-cyan-100">Checkpoint 4</p>
+                <p class="mt-1">🧪 Seeds e testes sequenciais passando</p>
+              </article>
+              <article class="rounded-xl border border-white/20 bg-white/5 p-3 text-white md:col-span-2">
+                <p class="text-xs uppercase tracking-[0.16em] text-cyan-100">Checkpoint 5</p>
+                <p class="mt-1">🐳 Imagem Docker buildada com sucesso</p>
+              </article>
+            </div>
           </div>
 
           <div class="code-card" data-copy="docker compose up --build&#10;curl http://localhost:8080/produtos&#10;.\\mvnw.cmd --% clean test -Dspring.profiles.active=test">
